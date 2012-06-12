@@ -3,3 +3,6 @@
 # available.  Otherwise it will execute while your application is stopped
 # before the deploy step.  This script gets executed directly, so it
 # could be python, php, ruby, etc.
+
+cp -r $OPENSHIFT_REPO_DIR/etc $OPENSHIFT_DATA_DIR/
+cp -r $OPENSHIFT_REPO_DIR/var $OPENSHIFT_DATA_DIR/

@@ -1,0 +1,57 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Installation</title><link href="modsecurity-reference.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.69.1" name="generator"><link rel="start" href="index.html" title="ModSecurity&reg; Reference
+  Manual"><link rel="up" href="index.html" title="ModSecurity&reg; Reference
+  Manual"><link rel="prev" href="ar01s02.html" title="ModSecurity Core Rules&trade;"><link rel="next" href="configuration-directives.html" title="Configuration Directives"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div style="background:#F5F5F5;width:100%;border-top:1px solid #DDDDDD;border-bottom:1px solid #DDDDDD"><table width="100%" cellspacing="0" cellpadding="0"><tr><td><a href="http://www.modsecurity.org"><img style="margin:4px" src="modsecurity.gif" width="120" height="36" alt="ModSecurity" border="0"></a></td><td align="right"><a href="http://www.breach.com"><img style="margin:6px" src="breach-logo-small.gif" height="36" width="100" border="0"></a></td></tr></table></div><div id="navheader"><table summary="Navigation header" width="100%"><tr><th align="center" colspan="3">Installation</th></tr><tr><td align="left" width="20%"><a accesskey="p" href="ar01s02.html">Prev</a>&nbsp;</td><td align="center" width="60%">&nbsp;<a accesskey="h" href="index.html">Home</a></td><td align="right" width="20%">&nbsp;<a accesskey="n" href="configuration-directives.html">Next</a></td></tr></table><hr size="1"></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="installation"></a>Installation</h2></div></div><div></div></div><p>ModSecurity installation consists of the following steps:</p><div class="orderedlist"><ol type="1"><li><p>ModSecurity 2.x works with Apache 2.0.x or better.</p></li><li><p>Make sure you have <code class="literal">mod_unique_id</code> installed.</p><p>mod_unique_id is packaged with Apache httpd.</p></li><li><p>Install the latest version of libxml2, if it isn't already
+        installed on the server.</p><p><a href="http://xmlsoft.org/downloads.html" target="_top">http://xmlsoft.org/downloads.html</a></p></li><li><p>Optionally install the latest version of Lua in the 5.1.x
+        branch, if it isn't already installed on the server and you will be
+        using the new Lua engine.</p><p><a href="http://www.lua.org/download.html" target="_top">http://www.lua.org/download.html</a></p><p>Note that ModSecurity requires the dynamic libraries. These are
+        not built by default in the source distribution, so the binary
+        distribution is recommended.</p></li><li><p>Stop Apache httpd</p></li><li><p>Unpack the ModSecurity archive</p></li><li><p>Building differs for UNIX (or UNIX-like) operating systems and
+        Windows.</p><div class="itemizedlist"><ul type="disc"><li><p>UNIX</p><div class="orderedlist"><ol type="a"><li><p>Run the configure script to generate a Makefile.
+                Typically no options are needed.</p><p><code class="literal">./configure</code></p><p>Options are available for more customization (use
+                <code class="literal">./configure --help</code> for a full list), but
+                typically you will only need to specify the location of the
+                <code class="literal">apxs</code> command installed by Apache httpd with
+                the <code class="literal">--with-apxs</code> option.</p><p><code class="literal">./configure
+                --with-apxs=/path/to/httpd-2.x.y/bin/apxs</code></p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>There are certain configure options that are meant for
+                  debugging an other development use. If enabled, these
+                  options can substantially impact performance. These options
+                  include all <code class="literal">--debug-*</code> options as well as
+                  the <code class="literal">--enable-performance-measurements</code>
+                  options.</p></div></li><li><p>Compile with: <code class="literal">make</code></p></li><li><p>Optionally test with: <code class="literal">make
+                test</code></p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>This is step is still a bit experimental. If you have
+                  problems, please send the full output and error from the
+                  build to the support list. Most common issues are related to
+                  not finding the required headers and/or libraries.</p></div></li><li><p>Optionally build the ModSecurity Log Collector with:
+                <code class="literal">make mlogc</code></p></li><li><p>Optionally install <code class="literal">mlogc</code>: Review the
+                <code class="literal">INSTALL</code> file included in the
+                apache2/mlogc-src directory in the distribution.</p></li><li><p>Install the ModSecurity module with: <code class="literal">make
+                install</code></p></li></ol></div></li><li><p>Windows (MS VC++ 8)</p><div class="orderedlist"><ol type="a"><li><p>Edit <code class="literal">Makefile.win</code> to configure the
+                Apache base and library paths.</p></li><li><p>Compile with: <code class="literal">nmake -f
+                Makefile.win</code></p></li><li><p>Install the ModSecurity module with: <code class="literal">nmake -f
+                Makefile.win install</code></p></li><li><p>Copy the <code class="literal">libxml2.dll</code> and
+                <code class="literal">lua5.1.dll</code> to the Apache
+                <code class="literal">bin</code> directory. Alternatively you can follow
+                the step below for using LoadFile to load these
+                libraries.</p></li></ol></div></li></ul></div></li><li><p>Edit the main Apache httpd config file (usually
+        <code class="literal">httpd.conf</code>)</p><p>On UNIX (and Windows if you did not copy the DLLs as stated
+        above) you must load libxml2 and lua5.1 before ModSecurity with
+        something like this:</p><p><pre class="programlisting">LoadFile /usr/lib/libxml2.so
+LoadFile /usr/lib/liblua5.1.so</pre></p><p>Load the ModSecurity module with:<pre class="programlisting">LoadModule security2_module modules/mod_security2.so</pre></p></li><li><p>Configure ModSecurity</p></li><li><p>Start Apache httpd</p></li><li><p>You should now have ModSecurity 2.x up and running.</p></li></ol></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>If you have compiled Apache yourself you might experience problems
+      compiling ModSecurity against PCRE. This is because Apache bundles PCRE
+      but this library is also typically provided by the operating system. I
+      would expect most (all) vendor-packaged Apache distributions to be
+      configured to use an external PCRE library (so this should not be a
+      problem).</p><p>You want to avoid Apache using the bundled PCRE library and
+      ModSecurity linking against the one provided by the operating system.
+      The easiest way to do this is to compile Apache against the PCRE library
+      provided by the operating system (or you can compile it against the
+      latest PCRE version you downloaded from the main PCRE distribution
+      site). You can do this at configure time using the<code class="literal"> --with-pcre</code> switch. If you are not in a
+      position to recompile Apache, then, to compile ModSecurity successfully,
+      you'd still need to have access to the bundled PCRE headers (they are
+      available only in the Apache source code) and change the include path
+      for ModSecurity (as you did in step 7 above) to point to them (via the
+      <code class="literal">--with-pcre</code> ModSecurity configure option).</p><p>Do note that if your Apache is using an external PCRE library you
+      can compile ModSecurity with <code class="literal">WITH_PCRE_STUDY</code> defined,which would possibly
+      give you a slight performance edge in regular expression
+      processing.</p></div></div><div id="navfooter"><hr size="1"><table summary="Navigation footer" width="100%"><tr><td align="left" width="40%"><a accesskey="p" href="ar01s02.html">Prev</a>&nbsp;</td><td align="center" width="20%">&nbsp;</td><td align="right" width="40%">&nbsp;<a accesskey="n" href="configuration-directives.html">Next</a></td></tr><tr><td valign="top" align="left" width="40%"><span class="trademark">ModSecurity Core Rules</span>&trade;&nbsp;</td><td align="center" width="20%"><a accesskey="h" href="index.html">Home</a></td><td valign="top" align="right" width="40%">&nbsp;Configuration Directives</td></tr></table></div><div align="center" class="copyright">Copyright (C) 2004-2009 <a href="http://www.breach.com">Breach Security</a></div></body></html>

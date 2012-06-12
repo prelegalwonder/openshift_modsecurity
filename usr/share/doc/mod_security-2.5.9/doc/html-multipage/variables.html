@@ -1,0 +1,350 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Variables</title><link href="modsecurity-reference.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.69.1" name="generator"><link rel="start" href="index.html" title="ModSecurity&reg; Reference
+  Manual"><link rel="up" href="index.html" title="ModSecurity&reg; Reference
+  Manual"><link rel="prev" href="processing-phases.html" title="Processing Phases"><link rel="next" href="transformation-functions.html" title="Transformation functions"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div style="background:#F5F5F5;width:100%;border-top:1px solid #DDDDDD;border-bottom:1px solid #DDDDDD"><table width="100%" cellspacing="0" cellpadding="0"><tr><td><a href="http://www.modsecurity.org"><img style="margin:4px" src="modsecurity.gif" width="120" height="36" alt="ModSecurity" border="0"></a></td><td align="right"><a href="http://www.breach.com"><img style="margin:6px" src="breach-logo-small.gif" height="36" width="100" border="0"></a></td></tr></table></div><div id="navheader"><table summary="Navigation header" width="100%"><tr><th align="center" colspan="3">Variables</th></tr><tr><td align="left" width="20%"><a accesskey="p" href="processing-phases.html">Prev</a>&nbsp;</td><td align="center" width="60%">&nbsp;<a accesskey="h" href="index.html">Home</a></td><td align="right" width="20%">&nbsp;<a accesskey="n" href="transformation-functions.html">Next</a></td></tr></table><hr size="1"></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="variables"></a>Variables</h2></div></div><div></div></div><p>The following variables are supported in ModSecurity 2.x:</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10D1F"></a><code class="literal">ARGS</code></h3></div></div><div></div></div><p><code class="literal">ARGS</code> is a collection and can be used on its own
+      (means all arguments including the POST Payload), with a static
+      parameter (matches arguments with that name), or with a regular
+      expression (matches all arguments with name that matches the regular
+      expression). To look at only the query string or body arguments, see the
+      <code class="literal">ARGS_GET</code> and <code class="literal">ARGS_POST</code>
+      collections.</p><p>Some variables are actually collections, which are expanded into
+      more variables at runtime. The following example will examine all
+      request arguments:<pre class="programlisting">SecRule ARGS dirty</pre>
+      Sometimes, however, you will want to look only at parts of a collection.
+      This can be achieved with the help of the <span class="emphasis"><em>selection
+      operator</em></span>(colon). The following example will only look at the
+      arguments named<code class="literal"> p</code> (do note that, in
+      general, requests can contain multiple arguments with the same name):
+      <pre class="programlisting">SecRule ARGS:p dirty</pre>
+      It is also possible to specify exclusions. The following will examine
+      all request arguments for the word<span class="emphasis"><em> dirty</em></span>, except
+      the ones named <code class="literal">z</code> (again, there can be
+      zero or more arguments named<code class="literal"> z</code>):
+      <pre class="programlisting">SecRule ARGS|!ARGS:z dirty</pre>
+      There is a special operator that allows you to count how many variables
+      there are in a collection. The following rule will trigger if there is
+      more than zero arguments in the request (ignore the second parameter for
+      the time being): <pre class="programlisting">SecRule &amp;ARGS !^0$</pre>
+      And sometimes you need to look at an array of parameters, each with a
+      slightly different name. In this case you can specify a regular
+      expression in the selection operator itself. The following rule will
+      look into all arguments whose names begin with <code class="literal">id_</code>: <pre class="programlisting">SecRule ARGS:/^id_/ dirty</pre></p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>Using <code class="literal">ARGS:p</code> will not result in any
+        invocations against the operator if argument p does not exist.</p><p>In ModSecurity 1.X, the <code class="literal">ARGS</code> variable stood
+        for <code class="literal">QUERY_STRING</code> + <code class="literal">POST_PAYLOAD</code>,
+        whereas now it expands to individual variables.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10D71"></a><code class="literal">ARGS_COMBINED_SIZE</code></h3></div></div><div></div></div><p>This variable allows you to set more targeted evaluations on the
+      total size of the Arguments as compared with normal Apache LimitRequest
+      directives. For example, you could create a rule to ensure that the
+      total size of the argument data is below a certain threshold (to help
+      prevent buffer overflow issues). Example: Block request if the size of
+      the arguments is above 25 characters.</p><pre class="programlisting">SecRule REQUEST_FILENAME "^/cgi-bin/login\.php" \
+    "chain,log,deny,phase:2,t:none,t:lowercase,t:normalisePath"
+SecRule <span class="emphasis"><em>ARGS_COMBINED_SIZE</em></span> "@gt 25"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10D7E"></a><code class="literal">ARGS_NAMES</code></h3></div></div><div></div></div><p>Is a collection of the argument names. You can search for specific
+      argument names that you want to block. In a positive policy scenario,
+      you can also whitelist (using an inverted rule with the ! character)
+      only authorized argument names. Example: This example rule will only
+      allow 2 argument names - p and a. If any other argument names are
+      injected, it will be blocked.</p><pre class="programlisting">SecRule REQUEST_FILENAME "/index.php" \
+    "chain,log,deny,status:403,phase:2,t:none,t:lowercase,t:normalisePath"
+SecRule<span class="emphasis"><em> ARGS_NAMES</em></span> "!^(p|a)$" "t:none,t:lowercase"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10D8B"></a><code class="literal">ARGS_GET</code></h3></div></div><div></div></div><p><code class="literal">ARGS_GET</code> is similar to <code class="literal">ARGS</code>,
+      but only contains arguments from the query string.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10D99"></a><code class="literal">ARGS_GET_NAMES</code></h3></div></div><div></div></div><p><code class="literal">ARGS_GET_NAMES</code> is similar to
+      <code class="literal">ARGS_NAMES</code>, but only contains argument names from the
+      query string.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10DA7"></a><code class="literal">ARGS_POST</code></h3></div></div><div></div></div><p><code class="literal">ARGS_POST</code> is similar to
+      <code class="literal">ARGS</code>, but only contains arguments from the POST
+      body.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10DB5"></a><code class="literal">ARGS_POST_NAMES</code></h3></div></div><div></div></div><p><code class="literal">ARGS_POST_NAMES</code> is similar to
+      <code class="literal">ARGS_NAMES</code>, but only contains argument names from the
+      POST body.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10DC3"></a><code class="literal">AUTH_TYPE</code></h3></div></div><div></div></div><p>This variable holds the authentication method used to validate a
+      user. Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>AUTH_TYPE</em></span> "basic" log,deny,status:403,phase:1,t:lowercase</pre><p><span class="emphasis"><em>Note</em></span></p><p>This data will not be available in a proxy-mode deployment as the
+      authentication is not local. In a proxy-mode deployment, you would need
+      to inspect the <code class="literal">REQUEST_HEADERS:Authorization</code>
+      header.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10DD9"></a><code class="literal">ENV</code></h3></div></div><div></div></div><p>Collection, requires a single parameter (after colon). The
+      <code class="literal">ENV</code> variable is set with setenv and does not give
+      access to the CGI environment variables. Example:</p><pre class="programlisting">SecRule REQUEST_FILENAME "printenv" pass,<span class="emphasis"><em>setenv:tag=suspicious</em></span>
+SecRule <span class="emphasis"><em>ENV:tag</em></span> "suspicious"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10DED"></a><code class="literal">FILES</code></h3></div></div><div></div></div><p>Collection. Contains a collection of original file names (as they
+      were called on the remote user's file system). Note: only available if
+      files were extracted from the request body. Example:</p><pre class="programlisting">SecRule<span class="emphasis"><em> FILES</em></span> "\.conf$" log,deny,status:403,phase:2</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10DFA"></a><code class="literal">FILES_COMBINED_SIZE</code></h3></div></div><div></div></div><p>Single value. Total size of the uploaded files. Note: only
+      available if files were extracted from the request body. Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>FILES_COMBINED_SIZE</em></span> "@gt 1000" log,deny,status:403,phase:2</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10E07"></a><code class="literal">FILES_NAMES</code></h3></div></div><div></div></div><p>Collection w/o parameter. Contains a list of form fields that were
+      used for file upload. Note: only available if files were extracted from
+      the request body. Example:</p><pre class="programlisting">SecRule<span class="emphasis"><em> FILES_NAMES</em></span> "^upfile$" log,deny,status:403,phase:2</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10E14"></a><code class="literal">FILES_SIZES</code></h3></div></div><div></div></div><p>Collection. Contains a list of file sizes. Useful for implementing
+      a size limitation on individual uploaded files. Note: only available if
+      files were extracted from the request body. Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>FILES_SIZES</em></span> "@gt 100" log,deny,status:403,phase:2</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10E21"></a><code class="literal">FILES_TMPNAMES</code></h3></div></div><div></div></div><p>Collection. Contains a collection of temporary files' names on the
+      disk. Useful when used together with <code class="literal">@inspectFile.</code> Note: only available if files
+      were extracted from the request body. Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>FILES_TMPNAMES</em></span> "@inspectFile /path/to/inspect_script.pl"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10E32"></a><code class="literal">GEO</code></h3></div></div><div></div></div><p><code class="literal">GEO</code> is a collection populated by the <code class="literal">@geoLookups</code> operator. It can be used to match
+      geographical fields looked up by an IP address or hostname.</p><p>Available since 2.2.0.</p><p>Fields:</p><div class="itemizedlist"><ul type="disc"><li><p><span class="emphasis"><em>COUNTRY_CODE:</em></span> Two character country code.
+          EX: US, UK, etc.</p></li><li><p><span class="emphasis"><em>COUNTRY_CODE3:</em></span> Up to three character
+          country code.</p></li><li><p><span class="emphasis"><em>COUNTRY_NAME:</em></span> The full country
+          name.</p></li><li><p><span class="emphasis"><em>COUNTRY_CONTINENT:</em></span> The two character
+          continent that the country is located. EX: EU</p></li><li><p><span class="emphasis"><em>REGION:</em></span> The two character region. For US,
+          this is state. For Canada, providence, etc.</p></li><li><p><span class="emphasis"><em>CITY:</em></span> The city name.</p></li><li><p><span class="emphasis"><em>POSTAL_CODE:</em></span> The postal code.</p></li><li><p><span class="emphasis"><em>LATITUDE:</em></span> The latitude.</p></li><li><p><span class="emphasis"><em>LONGITUDE:</em></span> The longitude.</p></li><li><p><span class="emphasis"><em>DMA_CODE:</em></span> The metropolitan area code. (US
+          only)</p></li><li><p><span class="emphasis"><em>AREA_CODE:</em></span> The phone system area code.
+          (US only)</p></li></ul></div><p>Example:</p><pre class="programlisting">SecRule REMOTE_ADDR "<span class="emphasis"><em>@geoLookup</em></span>" "chain,drop,msg:'Non-UK IP address'"
+SecRule GEO:COUNTRY_CODE "!@streq UK"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10E84"></a><code class="literal">HIGHEST_SEVERITY</code></h3></div></div><div></div></div><p>This variable holds the highest severity of any rules that have
+      matched so far. Severities are numeric values and thus can be used with
+      comparison operators such as <code class="literal">@lt</code>,
+      etc.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>Higher severities have a lower numeric value.</p><p>A value of 255 indicates no severity has been set.</p></div><pre class="programlisting">SecRule HIGHEST_SEVERITY "@le 2" "phase:2,deny,status:500,msg:'severity %{HIGHEST_SEVERITY}'"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10E97"></a><code class="literal">MATCHED_VAR</code></h3></div></div><div></div></div><p>This variable holds the value of the variable that was matched
+      against. It is similar to the TX:0, except it can be used for all
+      operators and does not require that the <code class="literal">capture</code> action be specified.</p><pre class="programlisting">SecRule ARGS pattern chain,deny
+...
+SecRule <span class="emphasis"><em>MATCHED_VAR</em></span> "further scrutiny"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10EA8"></a><code class="literal">MATCHED_VAR_NAME</code></h3></div></div><div></div></div><p>This variable holds the full name of the variable that was matched
+      against.</p><pre class="programlisting">SecRule ARGS pattern setvar:tx.mymatch=%{MATCHED_VAR_NAME}
+...
+SecRule <span class="emphasis"><em>TX:MYMATCH</em></span> "@eq ARGS:param" deny</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10EB5"></a><code class="literal">MODSEC_BUILD</code></h3></div></div><div></div></div><p>This variable holds the ModSecurity build number. This variable is
+      intended to be used to check the build number prior to using a feature
+      that is available only in a certain build. Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>MODSEC_BUILD</em></span> "!@ge 02050102" skipAfter:12345
+SecRule ARGS "@pm some key words" id:12345,deny,status:500</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10EC2"></a><code class="literal">MULTIPART_CRLF_LF_LINES</code></h3></div></div><div></div></div><p>This flag variable will be set to <code class="literal">1</code> whenever a
+      multi-part request uses mixed line terminators. The
+      <code class="literal">multipart/form-data</code> RFC requires
+      <code class="literal">CRLF</code> sequence to be used to terminate lines. Since
+      some client implementations use only <code class="literal">LF</code> to terminate
+      lines you might want to allow them to proceed under certain
+      circumstances (if you want to do this you will need to stop using
+      <code class="literal">MULTIPART_STRICT_ERROR</code> and check each multi-part flag
+      variable individually, avoiding <code class="literal">MULTIPART_LF_LINE</code>).
+      However, mixing <code class="literal">CRLF</code> and <code class="literal">LF</code> line
+      terminators is dangerous as it can allow for evasion. Therefore, in such
+      cases, you will have to add a check for
+      <code class="literal">MULTIPART_CRLF_LF_LINES</code>.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10EED"></a><code class="literal">MULTIPART_STRICT_ERROR</code></h3></div></div><div></div></div><p><code class="literal">MULTIPART_STRICT_ERROR</code> will be set to
+      <code class="literal">1</code> when any of the following variables is also set to
+      <code class="literal">1</code>: <code class="literal">REQBODY_PROCESSOR_ERROR</code>,
+      <code class="literal">MULTIPART_BOUNDARY_QUOTED</code>,
+      <code class="literal">MULTIPART_BOUNDARY_WHITESPACE</code>,
+      <code class="literal">MULTIPART_DATA_BEFORE</code>,
+      <code class="literal">MULTIPART_DATA_AFTER</code>,
+      <code class="literal">MULTIPART_HEADER_FOLDING</code>,
+      <code class="literal">MULTIPART_LF_LINE</code>,
+      <code class="literal">MULTIPART_SEMICOLON_MISSING</code>. Each of these variables
+      covers one unusual (although sometimes legal) aspect of the request body
+      in <code class="literal">multipart/form-data format</code>. Your policies should
+      <span class="emphasis"><em>always</em></span> contain a rule to check either this variable
+      (easier) or one or more individual variables (if you know exactly what
+      you want to accomplish). Depending on the rate of false positives and
+      your default policy you should decide whether to block or just warn when
+      the rule is triggered.</p><p>The best way to use this variable is as in the example
+      below:</p><pre class="programlisting">SecRule MULTIPART_STRICT_ERROR "!@eq 0" \
+"phase:2,t:none,log,deny,msg:'Multipart request body \
+failed strict validation: \
+PE %{REQBODY_PROCESSOR_ERROR}, \
+BQ %{MULTIPART_BOUNDARY_QUOTED}, \
+BW %{MULTIPART_BOUNDARY_WHITESPACE}, \
+DB %{MULTIPART_DATA_BEFORE}, \
+DA %{MULTIPART_DATA_AFTER}, \
+HF %{MULTIPART_HEADER_FOLDING}, \
+LF %{MULTIPART_LF_LINE}, \
+SM %{MULTIPART_SEMICOLON_MISSING}'"</pre><p>The <code class="literal">multipart/form-data</code> parser was upgraded in
+      ModSecurity v2.1.3 to actively look for signs of evasion. Many variables
+      (as listed above) were added to expose various facts discovered during
+      the parsing process. The <code class="literal">MULTIPART_STRICT_ERROR</code>
+      variable is handy to check on all abnormalities at once. The individual
+      variables allow detection to be fine-tuned according to your
+      circumstances in order to reduce the number of false positives. Detailed
+      analysis of various evasion techniques covered will be released as a
+      separated document at a later date.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10F35"></a><code class="literal">MULTIPART_UNMATCHED_BOUNDARY</code></h3></div></div><div></div></div><p>Set to <code class="literal">1</code> when, during the parsing phase of a
+      <code class="literal">multipart/request-body</code>, ModSecurity encounters what
+      feels like a boundary but it is not. Such an event may occur when
+      evasion of ModSecurity is attempted.</p><p>The best way to use this variable is as in the example
+      below:</p><pre class="programlisting">SecRule MULTIPART_UNMATCHED_BOUNDARY "!@eq 0" \
+"phase:2,t:none,log,deny,msg:'Multipart parser detected a possible unmatched boundary.'"</pre><p>Change the rule from blocking to logging-only if many false
+      positives are encountered.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10F4B"></a><code class="literal">PATH_INFO</code></h3></div></div><div></div></div><p>Besides passing query information to a script/handler, you can
+      also pass additional data, known as extra path information, as part of
+      the URL. Example:</p><pre class="programlisting">SecRule<span class="emphasis"><em> PATH_INFO</em></span> "^/(bin|etc|sbin|opt|usr)"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10F58"></a><code class="literal">QUERY_STRING</code></h3></div></div><div></div></div><p>This variable holds form data passed to the script/handler by
+      appending data after a question mark. Warning: Not URL-decoded.
+      Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>QUERY_STRING</em></span> "attack"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10F65"></a><code class="literal">REMOTE_ADDR</code></h3></div></div><div></div></div><p>This variable holds the IP address of the remote client.
+      Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>REMOTE_ADDR</em></span> "^192\.168\.1\.101$"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10F72"></a><code class="literal">REMOTE_HOST</code></h3></div></div><div></div></div><p>If HostnameLookUps are set to On, then this variable will hold the
+      DNS resolved remote host name. If it is set to Off, then it will hold
+      the remote IP address. Possible uses for this variable would be to deny
+      known bad client hosts or network blocks, or conversely, to allow in
+      authorized hosts. Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>REMOTE_HOST</em></span> "\.evil\.network\org$"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10F7F"></a><code class="literal">REMOTE_PORT</code></h3></div></div><div></div></div><p>This variable holds information on the source port that the client
+      used when initiating the connection to our web server. Example: in this
+      example, we are evaluating to see if the <code class="literal">REMOTE_PORT</code>
+      is less than 1024, which would indicate that the user is a privileged
+      user (root).</p><pre class="programlisting">SecRule <span class="emphasis"><em>REMOTE_PORT</em></span> "@lt 1024" phase:1,log,pass,setenv:remote_port=privileged</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10F90"></a><code class="literal">REMOTE_USER</code></h3></div></div><div></div></div><p>This variable holds the username of the authenticated user. If
+      there are no password (basic|digest) access controls in place, then this
+      variable will be empty. Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>REMOTE_USER</em></span> "admin"</pre><p><span class="emphasis"><em>Note</em></span></p><p>This data will not be available in a proxy-mode deployment as the
+      authentication is not local.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10FA2"></a><code class="literal">REQBODY_PROCESSOR</code></h3></div></div><div></div></div><p>Built-in processors are <code class="literal">URLENCODED</code>,<code class="literal">
+      MULTIPART</code>, and <code class="literal">XML</code>.
+      Example:</p><pre class="programlisting">SecRule<span class="emphasis"><em> REQBODY_PROCESSOR</em></span> "^XML$ chain
+SecRule XML "@validateDTD /opt/apache-frontend/conf/xml.dtd"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10FBB"></a><code class="literal">REQBODY_PROCESSOR_ERROR</code></h3></div></div><div></div></div><p>Possible values are 0 (no error) or 1 (error). This variable will
+      be set by request body processors (typically the
+      <code class="classname">multipart/request-data</code> parser or the XML parser)
+      when they fail to properly parse a request payload.</p><p>Example:</p><pre class="programlisting">SecRule<span class="emphasis"><em> REQBODY_PROCESSOR_ERROR</em></span> "@eq 1" deny,phase:2</pre><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>Your policies <span class="emphasis"><em>must</em></span> have a rule to check
+        REQBODY_PROCESSOR_ERROR at the beginning of phase 2. Failure to do so
+        will leave the door open for impedance mismatch attacks. It is
+        possible, for example, that a payload that cannot be parsed by
+        ModSecurity can be successfully parsed by more tolerant parser
+        operating in the application. If your policy dictates blocking then
+        you should reject the request if error is detected. When operating in
+        detection-only mode your rule should alert with high severity when
+        request body processing fails.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10FD3"></a><code class="literal">REQBODY_PROCESSOR_ERROR_MSG</code></h3></div></div><div></div></div><p>Empty, or contains the error message from the processor.
+      Example:</p><pre class="programlisting">SecRule<span class="emphasis"><em> REQBODY_PROCESSOR_ERROR_MSG</em></span> "failed to parse" t:lowercase</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10FE0"></a><code class="literal">REQUEST_BASENAME</code></h3></div></div><div></div></div><p>This variable holds just the filename part of
+      <code class="literal">REQUEST_FILENAME</code> (e.g. index.php).</p><p>Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>REQUEST_BASENAME</em></span> "^login\.php$" phase:2,t:none,t:lowercase</pre><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>Please note that anti-evasion transformations are not applied to
+        this variable by default. <code class="literal">REQUEST_BASENAME</code> will
+        recognise both <code class="literal">/</code> and <code class="literal">\</code> as path
+        separators.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11002"></a><code class="literal">REQUEST_BODY</code></h3></div></div><div></div></div><p>This variable holds the data in the request body (including
+      <code class="literal">POST_PAYLOAD</code> data). <code class="literal">REQUEST_BODY</code>
+      should be used if the original order of the arguments is important
+      (<code class="literal">ARGS</code> should be used in all other cases).
+      Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>REQUEST_BODY</em></span> "^username=\w{25,}\&amp;password=\w{25,}\&amp;Submit\=login$"</pre><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>This variable is only available if the
+        <code class="literal">URLENCODED</code> request body processor parsed a request
+        body. This will occur by default when an
+        <code class="literal">application/x-www-form-urlencoded</code> is detected, or
+        the <code class="literal">URLENCODED</code> request body parser is forced. As of
+        2.5.7 it is possible to force the presence of the
+        <code class="literal">REQUEST_BODY</code> variable, but only when there is no
+        request body processor defined, using the
+        <code class="literal">ctl:forceRequestBodyVariable</code> option in the
+        <code class="literal">REQUEST_HEADERS</code> phase.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11036"></a><code class="literal">REQUEST_COOKIES</code></h3></div></div><div></div></div><p>This variable is a collection of all of the cookie data. Example:
+      the following example is using the Ampersand special operator to count
+      how many variables are in the collection. In this rule, it would trigger
+      if the request does not include any Cookie headers.</p><pre class="programlisting">SecRule<span class="emphasis"><em> &amp;REQUEST_COOKIES</em></span> "@eq 0"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11043"></a><code class="literal">REQUEST_COOKIES_NAMES</code></h3></div></div><div></div></div><p>This variable is a collection of the cookie names in the request
+      headers. Example: the following rule will trigger if the JSESSIONID
+      cookie is not present.</p><pre class="programlisting">SecRule<span class="emphasis"><em> &amp;REQUEST_COOKIES_NAMES:JSESSIONID</em></span> "@eq 0"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11050"></a><code class="literal">REQUEST_FILENAME</code></h3></div></div><div></div></div><p>This variable holds the relative <code class="literal">REQUEST_URI</code>
+      minus the <code class="literal">QUERY_STRING</code> part (e.g. /index.php).
+      Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>REQUEST_FILENAME</em></span> "^/cgi-bin/login\.php$" phase:2,t:none,t:normalisePath</pre><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>Please note that anti-evasion transformations are not used on
+        <code class="literal">REQUEST_FILENAME</code> by default.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1106C"></a><code class="literal">REQUEST_HEADERS</code></h3></div></div><div></div></div><p>This variable can be used as either a collection of all of the
+      request headers or can be used to specify individual headers (by using
+      REQUEST_HEADERS<span class="emphasis"><em>:Header-Name</em></span>). Example: the first
+      example uses <code class="literal">REQUEST_HEADERS</code> as a collection and is
+      applying the <code class="literal">validateUrlEncoding</code> operator against all
+      headers.</p><pre class="programlisting">SecRule <span class="emphasis"><em>REQUEST_HEADERS</em></span> "@validateUrlEncoding"</pre><p>Example: the second example is targeting only the
+      <code class="literal">Host</code> header.</p><pre class="programlisting">SecRule <span class="emphasis"><em>REQUEST_HEADERS:Host</em></span> "^[\d\.]+$" \
+    "deny,log,status:400,msg:'Host header is a numeric IP address'"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11090"></a><code class="literal">REQUEST_HEADERS_NAMES</code></h3></div></div><div></div></div><p>This variable is a collection of the names of all of the request
+      headers. Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>REQUEST_HEADERS_NAMES</em></span> "^x-forwarded-for" \
+    "log,deny,status:403,t:lowercase,msg:'Proxy Server Used'"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1109D"></a><code class="literal">REQUEST_LINE</code></h3></div></div><div></div></div><p>This variable holds the complete request line sent to the server
+      (including the REQUEST_METHOD and HTTP version data). Example: this
+      example rule will trigger if the request method is something other than
+      GET, HEAD, POST or if the HTTP is something other than HTTP/0.9, 1.0 or
+      1.1.</p><pre class="programlisting">SecRule <span class="emphasis"><em>REQUEST_LINE</em></span> "!(^((?:(?:pos|ge)t|head))|http/(0\.9|1\.0|1\.1)$)" t:none,t:lowercase</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N110AA"></a><code class="literal">REQUEST_METHOD</code></h3></div></div><div></div></div><p>This variable holds the request method used by the client.</p><p>The following example will trigger if the request method is either
+      <code class="literal">CONNECT</code> or TRACE.</p><pre class="programlisting">SecRule <span class="emphasis"><em>REQUEST_METHOD</em></span> "^((?:connect|trace))$" t:none,t:lowercase</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N110BD"></a><code class="literal">REQUEST_PROTOCOL</code></h3></div></div><div></div></div><p>This variable holds the request protocol version information.
+      Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>REQUEST_PROTOCOL</em></span> "!^http/(0\.9|1\.0|1\.1)$" t:none,t:lowercase</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N110CA"></a><code class="literal">REQUEST_URI</code></h3></div></div><div></div></div><p>This variable holds the full URL including the
+      <code class="literal">QUERY_STRING</code> data (e.g. /index.php?p=X), however it
+      will never contain a domain name, even if it was provided on the request
+      line. It also does not include either the
+      <code class="literal">REQUEST_METHOD</code> or the HTTP version info.</p><p>Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>REQUEST_URI</em></span> "attack" phase:1,t:none,t:urlDecode,t:lowercase,t:normalisePath</pre><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>Please note that anti-evasion transformations are not used on
+        <code class="literal">REQUEST_URI</code> by default.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N110E8"></a><code class="literal">REQUEST_URI_RAW</code></h3></div></div><div></div></div><p>Same as <code class="literal">REQUEST_URI</code> but will contain the domain
+      name if it was provided on the request line (e.g.
+      http://www.example.com/index.php?p=X).</p><p>Example:</p><pre class="programlisting">SecRule<span class="emphasis"><em> REQUEST_URI_RAW</em></span> "http:/" phase:1,t:none,t:urlDecode,t:lowercase,t:normalisePath</pre><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>Please note that anti-evasion transformations are not used on
+        <code class="literal">REQUEST_URI_RAW</code> by default.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11102"></a><code class="literal">RESPONSE_BODY</code></h3></div></div><div></div></div><p>This variable holds the data for the response payload.</p><p>Example:</p><pre class="programlisting">SecRule<span class="emphasis"><em> RESPONSE_BODY</em></span> "ODBC Error Code"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11111"></a><code class="literal">RESPONSE_CONTENT_LENGTH</code></h3></div></div><div></div></div><p>Response body length in bytes. Can be available starting with
+      phase 3 but it does not have to be (as the length of response body is
+      not always known in advance.) If the size is not known this variable
+      will contain a zero. If <code class="literal">RESPONSE_CONTENT_LENGTH</code>
+      contains a zero in phase 5 that means the actual size of the response
+      body was 0.</p><p>The value of this variable can change between phases if the body
+      is modified. For example, in embedded mode
+      <code class="literal">mod_deflate</code> can compress the response body between
+      phases 4 and 5.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11122"></a><code class="literal">RESPONSE_CONTENT_TYPE</code></h3></div></div><div></div></div><p>Response content type. Only available starting with phase
+      3.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11129"></a><code class="literal">RESPONSE_HEADERS</code></h3></div></div><div></div></div><p>This variable is similar to the REQUEST_HEADERS variable and can
+      be used in the same manner. Example:</p><pre class="programlisting">SecRule<span class="emphasis"><em> RESPONSE_HEADERS</em></span><span class="emphasis"><em>:X-Cache</em></span> "MISS"</pre><p><span class="emphasis"><em>Note</em></span></p><p>This variable may not have access to some headers when running in
+      embedded-mode. Headers such as Server, Date, Connection and Content-Type
+      are added during a later Apache hook just prior to sending the data to
+      the client. This data should be available, however, either during
+      ModSecurity phase:5 (logging) or when running in proxy-mode.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1113D"></a><code class="literal">RESPONSE_HEADERS_NAMES</code></h3></div></div><div></div></div><p>This variable is a collection of the response header names.
+      Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>RESPONSE_HEADERS_NAMES</em></span> "Set-Cookie"</pre><p><span class="emphasis"><em>Note</em></span></p><p>Same limitations as RESPONSE_HEADERS with regards to access to
+      some headers in embedded-mode.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1114F"></a><code class="literal">RESPONSE_PROTOCOL</code></h3></div></div><div></div></div><p>This variable holds the HTTP response protocol information.
+      Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>RESPONSE_PROTOCOL</em></span> "^HTTP\/0\.9"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1115C"></a><code class="literal">RESPONSE_STATUS</code></h3></div></div><div></div></div><p>This variable holds the HTTP response status code as generated by
+      Apache. Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>RESPONSE_STATUS</em></span> "^[45]"</pre><p><span class="emphasis"><em>Note</em></span></p><p>This directive may not work as expected in embedded-mode as Apache
+      handles many of the stock response codes (404, 401, etc...) earlier in
+      Phase 2. This variable should work as expected in a proxy-mode
+      deployment.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1116E"></a><code class="literal">RULE</code></h3></div></div><div></div></div><p>This variable provides access to the <code class="literal">id</code>, <code class="literal">rev</code>,
+      <code class="literal">severity</code>, <code class="literal">logdata</code>, and <code class="literal">msg</code> fields of the rule that triggered the
+      action. Only available for expansion in action strings (e.g.<code class="literal">setvar:tx.varname=%{rule.id}</code>). Example:</p><pre class="programlisting">SecRule &amp;REQUEST_HEADERS:Host "@eq 0" "log,deny,setvar:tx.varname=<span class="emphasis"><em>%{rule.id}</em></span>"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11193"></a><code class="literal">SCRIPT_BASENAME</code></h3></div></div><div></div></div><p>This variable holds just the local filename part of
+      SCRIPT_FILENAME. Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>SCRIPT_BASENAME</em></span> "^login\.php$"</pre><p><span class="emphasis"><em>Note</em></span></p><p>This variable is not available in proxy mode.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N111A5"></a><code class="literal">SCRIPT_FILENAME</code></h3></div></div><div></div></div><p>This variable holds the full path on the server to the requested
+      script. (e.g. SCRIPT_NAME plus the server path). Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>SCRIPT_FILENAME</em></span> "^/usr/local/apache/cgi-bin/login\.php$"</pre><p><span class="emphasis"><em>Note</em></span></p><p>This variable is not available in proxy mode.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N111B7"></a><code class="literal">SCRIPT_GID</code></h3></div></div><div></div></div><p>This variable holds the group id (numerical value) of the group
+      owner of the script. Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>SCRIPT_GID</em></span> "!^46$"</pre><p><span class="emphasis"><em>Note</em></span></p><p>This variable is not available in proxy mode.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N111C9"></a><code class="literal">SCRIPT_GROUPNAME</code></h3></div></div><div></div></div><p>This variable holds the group name of the group owner of the
+      script. Example:</p><pre class="programlisting">SecRule<span class="emphasis"><em> SCRIPT_GROUPNAME</em></span> "!^apache$"</pre><p><span class="emphasis"><em>Note</em></span></p><p>This variable is not available in proxy mode.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N111DB"></a><code class="literal">SCRIPT_MODE</code></h3></div></div><div></div></div><p>This variable holds the script's permissions mode data (numerical
+      - 1=execute, 2=write, 4=read and 7=read/write/execute). Example: will
+      trigger if the script has the WRITE permissions set.</p><pre class="programlisting">SecRule <span class="emphasis"><em>SCRIPT_MODE</em></span> "^(2|3|6|7)$"</pre><p><span class="emphasis"><em>Note</em></span></p><p>This variable is not available in proxy mode.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N111ED"></a><code class="literal">SCRIPT_UID</code></h3></div></div><div></div></div><p>This variable holds the user id (numerical value) of the owner of
+      the script. Example: the example rule below will trigger if the UID is
+      not 46 (the Apache user).</p><pre class="programlisting">SecRule<span class="emphasis"><em> SCRIPT_UID</em></span> "!^46$"</pre><p><span class="emphasis"><em>Note</em></span></p><p>This variable is not available in proxy mode.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N111FF"></a><code class="literal">SCRIPT_USERNAME</code></h3></div></div><div></div></div><p>This variable holds the username of the owner of the script.
+      Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>SCRIPT_USERNAME</em></span> "!^apache$"</pre><p><span class="emphasis"><em>Note</em></span></p><p>This variable is not available in proxy mode.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11211"></a><code class="literal">SERVER_ADDR</code></h3></div></div><div></div></div><p>This variable contains the IP address of the server.
+      Example:</p><pre class="programlisting">SecRule<span class="emphasis"><em> SERVER_ADDR</em></span> "^192\.168\.1\.100$"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1121E"></a><code class="literal">SERVER_NAME</code></h3></div></div><div></div></div><p>This variable contains the server's hostname or IP address.
+      Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>SERVER_NAME</em></span> "hostname\.com$"</pre><p><span class="emphasis"><em>Note</em></span></p><p>This data is taken from the Host header submitted in the client
+      request.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11230"></a><code class="literal">SERVER_PORT</code></h3></div></div><div></div></div><p>This variable contains the local port that the web server is
+      listening on. Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>SERVER_PORT</em></span> "^80$"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1123D"></a><code class="literal">SESSION</code></h3></div></div><div></div></div><p>This variable is a collection, available only after <code class="literal">setsid</code> is executed. Example: the following
+      example shows how to initialize a SESSION collection with setsid, how to
+      use setvar to increase the session.score values, how to set the
+      session.blocked variable and finally how to deny the connection based on
+      the session:blocked value.</p><pre class="programlisting">SecRule REQUEST_COOKIES:PHPSESSID !^$ chain,nolog,pass
+SecAction setsid:%{REQUEST_COOKIES.PHPSESSID}
+SecRule REQUEST_URI "^/cgi-bin/finger$" \
+    "phase:2,t:none,t:lowercase,t:normalisePath,pass,log,setvar:<span class="emphasis"><em>session.score</em></span>=+10"
+SecRule<span class="emphasis"><em> SESSION:SCORE</em></span> "@gt 50" "pass,log,setvar:<span class="emphasis"><em>session.blocked</em></span>=1"
+SecRule<span class="emphasis"><em> SESSION:BLOCKED</em></span> "@eq 1" "log,deny,status:403"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11257"></a><code class="literal">SESSIONID</code></h3></div></div><div></div></div><p>This variable is the value set with <code class="literal">setsid</code>. Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>SESSIONID</em></span> !^$ chain,nolog,pass
+SecRule REQUEST_COOKIES:PHPSESSID !^$
+SecAction setsid:%{REQUEST_COOKIES.PHPSESSID}</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11268"></a><code class="literal">TIME</code></h3></div></div><div></div></div><p>This variable holds a formatted string representing the time
+      (hour:minute:second). Example:</p><pre class="programlisting">SecRule<span class="emphasis"><em> TIME</em></span> "^(([1](8|9))|([2](0|1|2|3))):\d{2}:\d{2}$"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11275"></a><code class="literal">TIME_DAY</code></h3></div></div><div></div></div><p>This variable holds the current date (1-31). Example: this rule
+      would trigger anytime between the 10th and 20th days of the
+      month.</p><pre class="programlisting">SecRule <span class="emphasis"><em>TIME_DAY</em></span> "^(([1](0|1|2|3|4|5|6|7|8|9))|20)$"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11282"></a><code class="literal">TIME_EPOCH</code></h3></div></div><div></div></div><p>This variable holds the time in seconds since 1970.
+      Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>TIME_EPOCH</em></span> "@gt 1000"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1128F"></a><code class="literal">TIME_HOUR</code></h3></div></div><div></div></div><p>This variable holds the current hour (0-23). Example: this rule
+      would trigger during "off hours".</p><pre class="programlisting">SecRule<span class="emphasis"><em> TIME_HOUR</em></span> "^(0|1|2|3|4|5|6|[1](8|9)|[2](0|1|2|3))$"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1129C"></a><code class="literal">TIME_MIN</code></h3></div></div><div></div></div><p>This variable holds the current minute (0-59). Example: this rule
+      would trigger during the last half hour of every hour.</p><pre class="programlisting">SecRule <span class="emphasis"><em>TIME_MIN</em></span> "^(3|4|5)"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N112A9"></a><code class="literal">TIME_MON</code></h3></div></div><div></div></div><p>This variable holds the current month (0-11). Example: this rule
+      would match if the month was either November (10) or December
+      (11).</p><pre class="programlisting">SecRule<span class="emphasis"><em> TIME_MON</em></span> "^1"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N112B6"></a><code class="literal">TIME_SEC</code></h3></div></div><div></div></div><p>This variable holds the current second count (0-59).
+      Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>TIME_SEC</em></span> "@gt 30"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N112C3"></a><code class="literal">TIME_WDAY</code></h3></div></div><div></div></div><p>This variable holds the current weekday (0-6). Example: this rule
+      would trigger only on week-ends (Saturday and Sunday).</p><pre class="programlisting">SecRule <span class="emphasis"><em>TIME_WDAY</em></span> "^(0|6)$"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N112D0"></a><code class="literal">TIME_YEAR</code></h3></div></div><div></div></div><p>This variable holds the current four-digit year data.
+      Example:</p><pre class="programlisting">SecRule <span class="emphasis"><em>TIME_YEAR</em></span> "^2006$"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N112DD"></a><code class="literal">TX</code></h3></div></div><div></div></div><p>Transaction Collection. This is used to store pieces of data,
+      create a transaction anomaly score, and so on. Transaction variables are
+      set for 1 request/response cycle. The scoring and evaluation will not
+      last past the current request/response process. Example: In this
+      example, we are using setvar to increase the tx.score value by 5 points.
+      We then have a follow-up run that will evaluate the transactional score
+      this request and then it will decided whether or not to allow/deny the
+      request through.</p><p>The following is a list of reserved names in the TX
+      collection:</p><div class="itemizedlist"><ul type="disc"><li><p><code class="literal">TX:0</code> - The matching value
+          when using the <code class="literal">@rx</code> or <code class="literal">@pm</code> operator with the <code class="literal">capture</code> action.</p></li><li><p><code class="literal">TX:1-TX:9</code> - The captured
+          subexpression value when using the <code class="literal">@rx</code> operator with capturing parens and the
+          <code class="literal">capture</code> action.</p></li></ul></div><pre class="programlisting">SecRule WEBSERVER_ERROR_LOG "does not exist" "phase:5,pass,<span class="emphasis"><em>setvar:tx.score=+5</em></span>"
+SecRule<span class="emphasis"><em> TX:SCORE</em></span> "@gt 20" deny,log</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11310"></a><code class="literal">USERID</code></h3></div></div><div></div></div><p>This variable is the value set with <code class="literal">setuid</code>. Example:</p><pre class="programlisting">SecAction setuid:%{REMOTE_USER},nolog
+SecRule<span class="emphasis"><em> USERID</em></span> "Admin"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11321"></a><code class="literal">WEBAPPID</code></h3></div></div><div></div></div><p>This variable is the value set with <code class="literal">SecWebAppId</code>. Example:</p><pre class="programlisting">SecWebAppId "WebApp1"
+SecRule<span class="emphasis"><em> WEBAPPID</em></span> "WebApp1" "chain,log,deny,status:403"
+SecRule REQUEST_HEADERS:Transfer-Encoding "!^$"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11332"></a><code class="literal">WEBSERVER_ERROR_LOG</code></h3></div></div><div></div></div><p>Contains zero or more error messages produced by the web server.
+      Access to this variable is in phase:5 (logging). Example:</p><pre class="programlisting">SecRule<span class="emphasis"><em> WEBSERVER_ERROR_LOG</em></span> "File does not exist" "phase:5,setvar:tx.score=+5"</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1133F"></a><code class="literal">XML</code></h3></div></div><div></div></div><p>Can be used standalone (as a target for
+      <code class="literal">validateDTD</code> and <code class="literal">validateSchema</code>) or
+      with an XPath expression parameter (which makes it a valid target for
+      any function that accepts plain text). Example using XPath:</p><pre class="programlisting">SecDefaultAction log,deny,status:403,phase:2
+SecRule REQUEST_HEADERS:Content-Type ^text/xml$ \
+    phase:1,t:lowercase,nolog,pass,ctl:requestBodyProcessor=<span class="emphasis"><em>XML</em></span>
+SecRule REQBODY_PROCESSOR "<span class="emphasis"><em>!^XML$</em></span>" skipAfter:12345
+SecRule <span class="emphasis"><em>XML:/employees/employee/name/text()</em></span> Fred
+SecRule <span class="emphasis"><em>XML:/xq:employees/employee/name/text()</em></span> Fred \
+    id:12345,xmlns:xq=http://www.example.com/employees</pre><p>The first XPath expression does not use namespaces. It would match
+      against payload such as this one:</p><pre class="programlisting">&lt;employees&gt;
+    &lt;employee&gt;
+        &lt;name&gt;Fred Jones&lt;/name&gt;
+        &lt;address location="home"&gt;
+            &lt;street&gt;900 Aurora Ave.&lt;/street&gt;
+            &lt;city&gt;Seattle&lt;/city&gt;
+            &lt;state&gt;WA&lt;/state&gt;
+            &lt;zip&gt;98115&lt;/zip&gt;
+        &lt;/address&gt;
+        &lt;address location="work"&gt;
+            &lt;street&gt;2011 152nd Avenue NE&lt;/street&gt;
+            &lt;city&gt;Redmond&lt;/city&gt;
+            &lt;state&gt;WA&lt;/state&gt;
+            &lt;zip&gt;98052&lt;/zip&gt;
+        &lt;/address&gt;
+        &lt;phone location="work"&gt;(425)555-5665&lt;/phone&gt;
+        &lt;phone location="home"&gt;(206)555-5555&lt;/phone&gt;
+        &lt;phone location="mobile"&gt;(206)555-4321&lt;/phone&gt;
+    &lt;/employee&gt;
+&lt;/employees&gt;</pre><p>The second XPath expression does use namespaces. It would match
+      the following payload:</p><pre class="programlisting">&lt;xq:employees xmlns:xq="http://www.example.com/employees"&gt;
+    &lt;employee&gt;
+        &lt;name&gt;Fred Jones&lt;/name&gt;
+        &lt;address location="home"&gt;
+            &lt;street&gt;900 Aurora Ave.&lt;/street&gt;
+            &lt;city&gt;Seattle&lt;/city&gt;
+            &lt;state&gt;WA&lt;/state&gt;
+            &lt;zip&gt;98115&lt;/zip&gt;
+        &lt;/address&gt;
+        &lt;address location="work"&gt;
+            &lt;street&gt;2011 152nd Avenue NE&lt;/street&gt;
+            &lt;city&gt;Redmond&lt;/city&gt;
+            &lt;state&gt;WA&lt;/state&gt;
+            &lt;zip&gt;98052&lt;/zip&gt;
+        &lt;/address&gt;
+        &lt;phone location="work"&gt;(425)555-5665&lt;/phone&gt;
+        &lt;phone location="home"&gt;(206)555-5555&lt;/phone&gt;
+        &lt;phone location="mobile"&gt;(206)555-4321&lt;/phone&gt;
+    &lt;/employee&gt;
+&lt;/xq:employees&gt;</pre><p>Note the different namespace used in the second example.</p><p>To learn more about XPath we suggest the following
+      resources:</p><div class="orderedlist"><ol type="1"><li><p><a href="http://www.w3.org/TR/xpath" target="_top">XPath
+          Standard</a></p></li><li><p><a href="http://www.zvon.org/xxl/XPathTutorial/General/examples.html" target="_top">XPath
+          Tutorial</a></p></li></ol></div></div></div><div id="navfooter"><hr size="1"><table summary="Navigation footer" width="100%"><tr><td align="left" width="40%"><a accesskey="p" href="processing-phases.html">Prev</a>&nbsp;</td><td align="center" width="20%">&nbsp;</td><td align="right" width="40%">&nbsp;<a accesskey="n" href="transformation-functions.html">Next</a></td></tr><tr><td valign="top" align="left" width="40%">Processing Phases&nbsp;</td><td align="center" width="20%"><a accesskey="h" href="index.html">Home</a></td><td valign="top" align="right" width="40%">&nbsp;Transformation functions</td></tr></table></div><div align="center" class="copyright">Copyright (C) 2004-2009 <a href="http://www.breach.com">Breach Security</a></div></body></html>

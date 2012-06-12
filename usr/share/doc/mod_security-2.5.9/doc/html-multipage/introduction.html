@@ -1,0 +1,86 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Introduction</title><link href="modsecurity-reference.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.69.1" name="generator"><link rel="start" href="index.html" title="ModSecurity&reg; Reference
+  Manual"><link rel="up" href="index.html" title="ModSecurity&reg; Reference
+  Manual"><link rel="prev" href="index.html" title="ModSecurity&reg; Reference
+  Manual"><link rel="next" href="ar01s02.html" title="ModSecurity Core Rules&trade;"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div style="background:#F5F5F5;width:100%;border-top:1px solid #DDDDDD;border-bottom:1px solid #DDDDDD"><table width="100%" cellspacing="0" cellpadding="0"><tr><td><a href="http://www.modsecurity.org"><img style="margin:4px" src="modsecurity.gif" width="120" height="36" alt="ModSecurity" border="0"></a></td><td align="right"><a href="http://www.breach.com"><img style="margin:6px" src="breach-logo-small.gif" height="36" width="100" border="0"></a></td></tr></table></div><div id="navheader"><table summary="Navigation header" width="100%"><tr><th align="center" colspan="3">Introduction</th></tr><tr><td align="left" width="20%"><a accesskey="p" href="index.html">Prev</a>&nbsp;</td><td align="center" width="60%">&nbsp;<a accesskey="h" href="index.html">Home</a></td><td align="right" width="20%">&nbsp;<a accesskey="n" href="ar01s02.html">Next</a></td></tr></table><hr size="1"></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="introduction"></a>Introduction</h2></div></div><div></div></div><p>ModSecurity is a web application firewall (WAF). With over 70% of
+    attacks now carried out over the web application level, organisations need
+    all the help they can get in making their systems secure. WAFs are
+    deployed to establish an increased external security layer to detect
+    and/or prevent attacks before they reach web applications. ModSecurity
+    provides protection from a range of attacks against web applications and
+    allows for HTTP traffic monitoring and real-time analysis with little or
+    no changes to existing infrastructure.</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1001D"></a>HTTP Traffic Logging</h3></div></div><div></div></div><p>Web servers are typically well-equipped to log traffic in a form
+      useful for marketing analyses, but fall short logging traffic to web
+      applications. In particular, most are not capable of logging the request
+      bodies. Your adversaries know this, and that is why most attacks are now
+      carried out via POST requests, rendering your systems blind. ModSecurity
+      makes full HTTP transaction logging possible, allowing complete requests
+      and responses to be logged. Its logging facilities also allow
+      fine-grained decisions to be made about exactly what is logged and when,
+      ensuring only the relevant data is recorded. As some of the request
+      and/or response may contain sensitive data in certain fields,
+      ModSecurity can be configured to mask these fields before they are
+      written to the audit log.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10022"></a>Real-Time Monitoring and Attack Detection</h3></div></div><div></div></div><p>In addition to providing logging facilities, ModSecurity can
+      monitor the HTTP traffic in real time in order to detect attacks. In
+      this case, ModSecurity operates as a web intrusion detection tool,
+      allowing you to react to suspicious events that take place at your web
+      systems.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10027"></a>Attack Prevention and Just-in-time Patching</h3></div></div><div></div></div><p>ModSecurity can also act immediately to prevent attacks from
+      reaching your web applications. There are three commonly used
+      approaches:</p><div class="orderedlist"><ol type="1"><li><p>Negative security model. A negative security model monitors
+          requests for anomalies, unusual behaviour, and common web
+          application attacks. It keeps anomaly scores for each request, IP
+          addresses, application sessions, and user accounts. Requests with
+          high anomaly scores are either logged or rejected altogether.</p></li><li><p>Positive security model. When a positive security model is
+          deployed, only requests that are known to be valid are accepted,
+          with everything else rejected. This model requires knownledge of the
+          web applications you are protecting. Therefore a positive security
+          model works best with applications that are heavily used but rarely
+          updated so that maintenance of the model is minimized.</p></li><li><p>Known weaknesses and vulnerabilities. Its rule language makes
+          ModSecurity an ideal external patching tool. External patching
+          (sometimes referred to as Virtual Patching) is about reducing the
+          window of opportunity. Time needed to patch application
+          vulnerabilities often runs to weeks in many organisations. With
+          ModSecurity, applications can be patched from the outside, without
+          touching the application source code (and even without any access to
+          it), making your systems secure until a proper patch is applied to
+          the application.</p></li></ol></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10038"></a>Flexible Rule Engine</h3></div></div><div></div></div><p>A flexible rule engine sits in the heart of ModSecurity. It
+      implements the ModSecurity Rule Language, which is a specialised
+      programming language designed to work with HTTP transaction data. The
+      ModSecurity Rule Language is designed to be easy to use, yet flexible:
+      common operations are simple while complex operations are possible.
+      Certified ModSecurity Rules, included with ModSecurity, contain a
+      comprehensive set of rules that implement general-purpose hardening,
+      protocol validation and detection of common web application security
+      issues. Heavily commented, these rules can be used as a learning
+      tool.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1003D"></a>Embedded-mode Deployment</h3></div></div><div></div></div><p>ModSecurity is an embeddable web application firewall, which means
+      it can be deployed as part of your existing web server infrastructure
+      provided your web servers are Apache-based. This deployment method has
+      certain advantages:</p><div class="orderedlist"><ol type="1"><li><p>No changes to existing network. It only takes a few minutes to
+          add ModSecurity to your existing web servers. And because it was
+          designed to be completely passive by default, you are free to deploy
+          it incrementally and only use the features you need. It is equally
+          easy to remove or deactivate it if required.</p></li><li><p>No single point of failure. Unlike with network-based
+          deployments, you will not be introducing a new point of failure to
+          your system.</p></li><li><p>Implicit load balancing and scaling. Because it works embedded
+          in web servers, ModSecurity will automatically take advantage of the
+          additional load balancing and scalability features. You will not
+          need to think of load balancing and scaling unless your existing
+          system needs them.</p></li><li><p>Minimal overhead. Because it works from inside the web server
+          process there is no overhead for network communication and minimal
+          overhead in parsing and data exchange.</p></li><li><p>No problem with encrypted or compressed content. Many IDS
+          systems have difficulties analysing SSL traffic. This is not a
+          problem for ModSecurity because it is positioned to work when the
+          traffic is decrypted and decompressed.</p></li></ol></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10054"></a>Network-based Deployment</h3></div></div><div></div></div><p>ModSecurity works equally well when deployed as part of an
+      Apache-based reverse proxy server, and many of our customers choose to
+      do so. In this scenario, one installation of ModSecurity can protect any
+      number of web servers (even the non-Apache ones).</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10059"></a>Portability</h3></div></div><div></div></div><p>ModSecurity is known to work well on a wide range of operating
+      systems. Our customers are successfully running it on Linux, Windows,
+      Solaris, FreeBSD, OpenBSD, NetBSD, AIX, Mac OS X, and HP-UX.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="licensing"></a>Licensing</h3></div></div><div></div></div><p>ModSecurity is available under two licenses. Users can choose to
+      use the software under the terms of the GNU General Public License
+      version 2 (licence text is included with the distribution), as an Open
+      Source / Free Software product. A range of commercial licenses is also
+      available, together with a range of commercial support contracts. For
+      more information on commercial licensing please contact Breach
+      Security.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>ModSecurity, mod_security, ModSecurity Pro, and ModSecurity Core
+        Rules are trademarks or registered trademarks of Breach Security,
+        Inc.</p></div></div></div><div id="navfooter"><hr size="1"><table summary="Navigation footer" width="100%"><tr><td align="left" width="40%"><a accesskey="p" href="index.html">Prev</a>&nbsp;</td><td align="center" width="20%">&nbsp;</td><td align="right" width="40%">&nbsp;<a accesskey="n" href="ar01s02.html">Next</a></td></tr><tr><td valign="top" align="left" width="40%"><span class="trademark">ModSecurity</span>&reg; Reference
+  Manual&nbsp;</td><td align="center" width="20%"><a accesskey="h" href="index.html">Home</a></td><td valign="top" align="right" width="40%">&nbsp;<span class="trademark">ModSecurity Core Rules</span>&trade;</td></tr></table></div><div align="center" class="copyright">Copyright (C) 2004-2009 <a href="http://www.breach.com">Breach Security</a></div></body></html>

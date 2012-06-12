@@ -1,0 +1,315 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>ModSecurity 2 Data Formats</title><link href="modsecurity-reference.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.69.1" name="generator"><link rel="start" href="#N10001" title="ModSecurity 2 Data Formats"><link rel="next" href="#N10016" title="Alerts"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div style="background:#F5F5F5;width:100%;border-top:1px solid #DDDDDD;border-bottom:1px solid #DDDDDD"><table width="100%" cellspacing="0" cellpadding="0"><tr><td><a href="http://www.modsecurity.org"><img style="margin:4px" src="modsecurity.gif" width="120" height="36" alt="ModSecurity" border="0"></a></td><td align="right"><a href="http://www.breach.com"><img style="margin:6px" src="breach-logo-small.gif" height="36" width="100" border="0"></a></td></tr></table></div><div class="article" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="N10001"></a>ModSecurity 2 Data Formats</h2></div><div><p class="releaseinfo">Version 2.5.9 (March 5, 2009)</p></div><div><p class="copyright">Copyright &copy; 2004-2009 Breach Security, Inc. (<a href="http://www.breach.com" target="_top">http://www.breach.com</a>)</p></div></div><div></div><hr size="1"></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="section"><a href="#N10016">Alerts</a></span></dt><dd><dl><dt><span class="section"><a href="#N1002C">Alert Action Description</a></span></dt><dt><span class="section"><a href="#N10073">Alert Justification Description</a></span></dt><dt><span class="section"><a href="#N10152">Meta-data</a></span></dt><dt><span class="section"><a href="#N101C7">Escaping</a></span></dt><dt><span class="section"><a href="#N10233">Alerts in the Apache Error Log</a></span></dt><dt><span class="section"><a href="#N10254">Alerts in Audit Logs</a></span></dt></dl></dd><dt><span class="section"><a href="#N10269">Audit Log</a></span></dt><dd><dl><dt><span class="section"><a href="#N10290">Parts</a></span></dt><dt><span class="section"><a href="#N104AE">Storage Formats</a></span></dt><dt><span class="section"><a href="#N10517">Transport Protocol</a></span></dt></dl></dd></dl></div><p>The purpose of this document is to describe the formats of the ModSecurity alert messages,
+        transaction logs and communication protocols, which would not only allow for a better
+        understanding what ModSecurity does but also for an easy integration with third-party tools
+        and products.</p><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N10016"></a>Alerts</h2></div></div><div></div></div><p>As part of its operations ModSecurity will emit alerts, which are eather
+                <span class="emphasis"><em>warnings</em></span> (non-fatal) or <span class="emphasis"><em>errors</em></span> (fatal,
+            usually leading to the interception of the transaction in question). Below is an example
+            of a ModSecurity alert entry:</p><pre class="programlisting">Access denied with code 505 (phase 1). Match of "rx
+  ^HTTP/(0\\\\.9|1\\\\.[01])$" against "REQUEST_PROTOCOL" required.
+  [id "960034"] [msg "HTTP protocol version is not allowed by policy"]
+  [severity "CRITICAL"] [uri "/"] [unique_id "PQaTTVBEUOkAAFwKXrYAAAAM"]</pre><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>Alerts will only ever contain one line of text but we've broken the above example
+                into multiple lines to make it fit into the page.</p></div><p>Each alert entry begins with the engine message, which describes what ModSecurity did
+            and why. For
+            example:<pre class="programlisting">Access denied with code 505 (phase 1). Match of "rx
+  ^HTTP/(0\\\\.9|1\\\\.[01])$" against "REQUEST_PROTOCOL" required.</pre></p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N1002C"></a>Alert Action Description</h3></div></div><div></div></div><p>The first part of the engine message tells you whether ModSecurity acted to
+                interrupt transaction or rule processing:</p><div class="orderedlist"><ol type="1"><li><p>If the alert is only a warning, the first sentence will simply say
+                            <span class="emphasis"><em>Warning</em></span>.</p></li><li><p>If the transaction was intercepted, the first sentence will begin with
+                            <span class="emphasis"><em>Access denied</em></span>. What follows is the list of possible
+                        messages related to transaction interception:</p><div class="itemizedlist"><ul type="disc"><li><p><span class="emphasis"><em>Access denied with code %0</em></span> - a response with
+                                status code <code class="literal">%0</code> was sent.</p></li><li><p><span class="emphasis"><em>Access denied with connection close</em></span> -
+                                connection was abruptly closed.</p></li><li><p><span class="emphasis"><em>Access denied with redirection to %0 using status
+                                    %1</em></span> - a redirection to URI <code class="literal">%0</code> was
+                                issued using status <code class="literal">%1</code>.</p></li></ul></div></li><li><p>There is also a special message that ModSecurity emits where an <code class="literal">allow</code> action is executed. There are three variations of this
+                        type of message:</p><div class="itemizedlist"><ul type="disc"><li><p><span class="emphasis"><em>Access allowed</em></span> - rule engine stopped
+                                processing rules (transaction was unaffected).</p></li><li><p><span class="emphasis"><em>Access to phase allowed</em></span> - rule engine stopped
+                                processing rules in the current phase only. Subsequent phases will
+                                be processed normally. Transaction was not affected by this rule but
+                                it may be affected by any of the rules in the subsequent
+                                phase.</p></li><li><p><span class="emphasis"><em>Access to request allowed</em></span> - rule engine
+                                stopped processing rules in the current phase. Phases prior to
+                                request execution in the backend (currently phases 1 and 2) will not
+                                be processed. The response phases (currently phases 3 and 4) and
+                                others (currently phase 5) will be processed as normal. Transaction
+                                was not affected by this rule but it may be affected by any of the
+                                rules in the subsequent phase.</p></li></ul></div></li></ol></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10073"></a>Alert Justification Description</h3></div></div><div></div></div><p>The second part of the engine message explains <span class="emphasis"><em>why</em></span> the alert
+                was generated. Since it is automatically generated from the rules it will be very
+                technical in nature, talking about operators and their parameters and give you
+                insight into what the rule looked like. But this message cannot give you insight
+                into the reasoning behind the rule. A well-written rule will always specify a
+                human-readable message (using the <code class="literal">msg</code> action) to provide further
+                information.</p><p>The format of the second part of the engine message depends on whether it was
+                generated by the operator (which happens on a match) or by the rule processor (which
+                happens where there is not a match, but the negation was used):</p><div class="itemizedlist"><ul type="disc"><li><p><code class="literal">@beginsWith</code> - <span class="emphasis"><em>String match %0 at
+                            %1.</em></span></p></li><li><p><code class="literal">@contains</code> - <span class="emphasis"><em>String match %0 at
+                        %1.</em></span></p></li><li><p><code class="literal">@containsWord</code> - <span class="emphasis"><em>String match %0 at
+                            %1.</em></span></p></li><li><p><code class="literal">@endsWith</code> - <span class="emphasis"><em>String match %0 at
+                        %1.</em></span></p></li><li><p><code class="literal">@eq</code> - <span class="emphasis"><em>Operator EQ matched %0 at
+                            %1.</em></span></p></li><li><p><code class="literal">@ge</code> - <span class="emphasis"><em>Operator GE matched %0 at
+                            %1.</em></span></p></li><li><p><code class="literal">@geoLookup</code> - <span class="emphasis"><em>Geo lookup for %0 succeeded at
+                            %1.</em></span></p></li><li><p><code class="literal">@inspectFile</code> - <span class="emphasis"><em>File %0 rejected by the
+                            approver script %1: %2</em></span></p></li><li><p><code class="literal">@le</code> - <span class="emphasis"><em>Operator LE matched %0 at
+                            %1.</em></span></p></li><li><p><code class="literal">@lt</code> - <span class="emphasis"><em>Operator LT matched %0 at
+                            %1.</em></span></p></li><li><p><code class="literal">@rbl</code> - <span class="emphasis"><em>RBL lookup of %0 succeeded at
+                            %1.</em></span></p></li><li><p><code class="literal">@rx</code> - <span class="emphasis"><em>Pattern match %0 at
+                        %1.</em></span></p></li><li><p><code class="literal">@streq</code> - <span class="emphasis"><em>String match %0 at
+                        %1.</em></span></p></li><li><p><code class="literal">@validateByteRange</code> - <span class="emphasis"><em>Found %0 byte(s) in %1
+                            outside range: %2.</em></span></p></li><li><p><code class="literal">@validateDTD</code> - <span class="emphasis"><em>XML: DTD validation
+                            failed.</em></span></p></li><li><p><code class="literal">@validateSchema</code> - <span class="emphasis"><em>XML: Schema validation
+                            failed.</em></span></p></li><li><p><code class="literal">@validateUrlEncoding</code></p><div class="itemizedlist"><ul type="circle"><li><p><span class="emphasis"><em>Invalid URL Encoding: Non-hexadecimal digits used at
+                                    %0.</em></span></p></li><li><p><span class="emphasis"><em>Invalid URL Encoding: Not enough characters at the end
+                                    of input at %0.</em></span></p></li></ul></div></li><li><p><code class="literal">@validateUtf8Encoding</code></p><div class="itemizedlist"><ul type="circle"><li><p><span class="emphasis"><em>Invalid UTF-8 encoding: not enough bytes in character at
+                                    %0.</em></span></p></li><li><p><span class="emphasis"><em>Invalid UTF-8 encoding: invalid byte value in character
+                                    at %0.</em></span></p></li><li><p><span class="emphasis"><em>Invalid UTF-8 encoding: overlong character detected at
+                                    %0.</em></span></p></li><li><p><span class="emphasis"><em>Invalid UTF-8 encoding: use of restricted character at
+                                    %0.</em></span></p></li><li><p><span class="emphasis"><em>Invalid UTF-8 encoding: decoding error at
+                                %0.</em></span></p></li></ul></div></li><li><p><code class="literal">@verifyCC</code> - <span class="emphasis"><em>CC# match %0 at
+                        %1.</em></span></p></li></ul></div><p>Messages not related to operators:</p><div class="itemizedlist"><ul type="disc"><li><p>When <code class="literal">SecAction</code> directive is processed -
+                            <span class="emphasis"><em>Unconditional match in SecAction.</em></span></p></li><li><p>When <code class="literal">SecRule</code> does not match but negation is used -
+                            <span class="emphasis"><em>Match of %0 against %1 required.</em></span></p></li></ul></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>The parameters to the operators <code class="literal">@rx</code> and <code class="literal">@pm</code> (regular expression and text pattern, respectively) will be
+                    truncated to 252 bytes if they are longer than this limit. In this case the
+                    parameter in the alert message will be terminated with three dots.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10152"></a>Meta-data</h3></div></div><div></div></div><p>The metadata fields are always placed at the end of the alert entry. Each metadata
+                field is a text fragment that consists of an open bracket followed by the metadata
+                field name, followed by the value and the closing bracket. What follows is the text
+                fragment that makes up the <code class="literal">id</code> metadata field.</p><pre class="programlisting">[id "960034"]</pre><p>The following metadata fields are currently used:</p><div class="orderedlist"><ol type="1"><li><p><code class="literal">offset</code> - The byte offset where a match occured within
+                        the target data. This is not always available.</p></li><li><p><code class="literal">id</code> - Unique rule ID, as specified by the <code class="literal">id</code> action.</p></li><li><p><code class="literal">rev</code> - Rule revision, as specified by the <code class="literal">rev</code> action.</p></li><li><p><code class="literal">msg</code> - Human-readable message, as specified by the
+                            <code class="literal">msg</code> action.</p></li><li><p><code class="literal">severity</code> - Event severity as text, as specified by the
+                            <code class="literal">severity</code> action. The possible values (with their
+                        corresponding numberical values in brackets) are <code class="literal">EMERGENCY</code> (0), <code class="literal">ALERT</code> (1), <code class="literal">CRITICAL</code> (2), <code class="literal">ERROR</code> (3), <code class="literal">WARNING</code> (4), <code class="literal">NOTICE</code> (5), <code class="literal">INFO</code> (6) and <code class="literal">DEBUG</code> (7).</p></li><li><p><code class="literal">unique_id</code> - Unique event ID, generated
+                        automatically.</p></li><li><p><code class="literal">uri</code> - Request URI.</p></li><li><p><code class="literal">logdata</code> - contains transaction data fragment, as
+                        specified by the <code class="literal">logdata</code> action.</p></li></ol></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N101C7"></a>Escaping</h3></div></div><div></div></div><p>ModSecurity alerts will always contain text fragments that were taken from
+                configuration or the transaction. Such text fragments escaped before they are user
+                in messages, in order to sanitise the potentially dangerous characters. They are
+                also sometimes surrounded using double quotes. The escaping algorithm is as
+                    follows:<div class="orderedlist"><ol type="1"><li><p>Characters <code class="literal">0x08</code> (<code class="literal">BACKSPACE</code>),
+                                <code class="literal">0x0a</code> (<code class="literal">NEWLINE</code>), <code class="literal">0x10</code> (<code class="literal">CARRIAGE RETURN</code>), <code class="literal">0x09</code> (<code class="literal">HORIZONTAL TAB</code>) and <code class="literal">0x0b</code> (<code class="literal">VERTICAL TAB</code>) will be
+                            represented as <code class="literal">\b</code>, <code class="literal">\n</code>, <code class="literal">\r</code>, <code class="literal">\t</code> and <code class="literal">\v</code>,
+                            respectively.</p></li><li><p>Bytes from the ranges <code class="literal">0-0x1f</code> and <code class="literal">0x7f-0xff</code> (inclusive) will be represented as <code class="literal">\xHH</code>, where <code class="literal">HH</code> is the hexadecimal
+                            value of the byte.</p></li><li><p>Backslash characters (<code class="literal">\</code>) will be represented as
+                                <code class="literal">\\</code>.</p></li><li><p>Each double quote character will be represented as <code class="literal">\"</code>, but only if the entire fragment is surrounded with
+                            double quotes.</p></li></ol></div></p></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10233"></a>Alerts in the Apache Error Log</h3></div></div><div></div></div><p>Every ModSecurity alert conforms to the following format when it appears in the
+                Apache error log:</p><pre class="programlisting">[Sun Jun 24 10:19:58 2007] [error] [client 192.168.0.1]
+            ModSecurity: ALERT_MESSAGE</pre><p>The above is a standard Apache error log format. The <code class="literal">ModSecurity:
+                </code> prefix is specific to ModSecurity. It is used to allow quick
+                identification of ModSecurity alert messages when they appear in the same file next
+                to other Apache messages.</p><p>The actual message (<code class="literal">ALERT_MESSAGE</code> in the example above) is in
+                the same format as described in the <span class="emphasis"><em>Alerts</em></span> section.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>Apache further escapes ModSecurity alert messages before writing them to the
+                    error log. This means that all backslash characters will be doubled in the error
+                    log. In practice, since ModSecurity will already represent a single backslash
+                    within an untrusted text fragment as two backslashes, the end result in the
+                    Apache error log will be <span class="emphasis"><em>four</em></span> backslashes. Thus, if you
+                    need to interpret a ModSecurity message from the error log, you should decode
+                    the message part after the <code class="literal">ModSecurity:</code> prefix first. This
+                    step will peel the first encoding layer.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10254"></a>Alerts in Audit Logs</h3></div></div><div></div></div><p>Alerts are transported in the <code class="literal">H</code> section of the ModSecurity
+                Audit Log. Alerts will appear each on a separate line and in the order they were
+                generated by ModSecurity. Each line will be in the following format:</p><pre class="programlisting">Message: ALERT_MESSAGE</pre><p>Below is an example of an <code class="literal">H</code> section that contains two alert
+                messages:</p><pre class="programlisting">--c7036611-H--
+Message: Warning. Match of "rx ^apache.*perl" against
+  "REQUEST_HEADERS:User-Agent" required. [id "990011"] [msg "Request
+  Indicates an automated program explored the site"] [severity "NOTICE"]
+Message: Warning. Pattern match "(?:\\b(?:(?:s(?:elect\\b(?:.{1,100}?\\b
+  (?:(?:length|count|top)\\b.{1,100}?\\bfrom|from\\b.{1,100}?\\bwhere)
+  |.*?\\b(?:d(?:ump\\b.*\\bfrom|ata_type)|(?:to_(?:numbe|cha)|inst)r))|p_
+  (?:(?:addextendedpro|sqlexe)c|(?:oacreat|prepar)e|execute(?:sql)?|
+  makewebt ..." at ARGS:c. [id "950001"] [msg "SQL Injection Attack.
+  Matched signature: union select"] [severity "CRITICAL"]
+Stopwatch: 1199881676978327 2514 (396 2224 -)
+Producer: ModSecurity v2.x.x (Apache 2.x)
+Server: Apache/2.x.x
+
+--c7036611-Z--</pre></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N10269"></a>Audit Log</h2></div></div><div></div></div><p>ModSecurity records one transaction in a single audit log file. Below is an
+            example:</p><pre class="programlisting">--c7036611-A--
+[09/Jan/2008:12:27:56 +0000] OSD4l1BEUOkAAHZ8Y3QAAAAH 209.90.77.54 64995
+  80.68.80.233 80
+--c7036611-B--
+GET //EvilBoard_0.1a/index.php?c='/**/union/**/select/**/1,concat(username,
+  char(77),password,char(77),email_address,char(77),info,char(77),user_level,
+  char(77))/**/from/**/eb_members/**/where/**/userid=1/*http://kamloopstutor.
+  com/images/banners/on.txt? HTTP/1.1
+TE: deflate,gzip;q=0.3
+Connection: TE, cslose
+Host: www.example.com
+User-Agent: libwww-perl/5.808
+
+--c7036611-F--
+HTTP/1.1 404 Not Found
+Content-Length: 223
+Connection: close
+Content-Type: text/html; charset=iso-8859-1
+
+--c7036611-H--
+Message: Warning. Match of "rx ^apache.*perl" against
+  "REQUEST_HEADERS:User-Agent" required. [id "990011"] [msg "Request
+  Indicates an automated program explored the site"] [severity "NOTICE"]
+Message: Warning. Pattern match "(?:\\b(?:(?:s(?:elect\\b(?:.{1,100}?\\b
+  (?:(?:length|count|top)\\b.{1,100}?\\bfrom|from\\b.{1,100}?\\bwhere)
+  |.*?\\b(?:d(?:ump\\b.*\\bfrom|ata_type)|(?:to_(?:numbe|cha)|inst)r))|p_
+  (?:(?:addextendedpro|sqlexe)c|(?:oacreat|prepar)e|execute(?:sql)?|
+  makewebt ..." at ARGS:c. [id "950001"] [msg "SQL Injection Attack.
+  Matched signature: union select"] [severity "CRITICAL"]
+Stopwatch: 1199881676978327 2514 (396 2224 -)
+Producer: ModSecurity v2.x.x (Apache 2.x)
+Server: Apache/2.x.x
+
+--c7036611-Z--
+</pre><p>The file consist of multiple sections, each in different format. Separators are used
+            to define sections:</p><pre class="programlisting">--c7036611-A--</pre><p>A separator always begins on a new line and conforms to the following format:</p><div class="orderedlist"><ol type="1"><li><p>Two dashes</p></li><li><p>Unique boundary, which consists from several hexadecimal characters.</p></li><li><p>One dash character.</p></li><li><p>Section identifier, currently a single uppercase letter.</p></li><li><p>Two trailing dashes.</p></li></ol></div><p>Refer to the documentation for <code class="literal">SecAuditLogParts</code> for the explanation
+            of each part.</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10290"></a>Parts</h3></div></div><div></div></div><p>This section documents the audit log parts available in ModSecurity 2.x. They are: <div class="itemizedlist"><ul type="disc"><li><p><code class="literal">A</code> - audit log header</p></li><li><p><code class="literal">B</code> - request headers</p></li><li><p><code class="literal">C</code> - request body</p></li><li><p><code class="literal">D</code> - intended response headers (NOT
+                            IMPLEMENTED)</p></li><li><p><code class="literal">E</code> - intended response body</p></li><li><p><code class="literal">F</code> - response headers</p></li><li><p><code class="literal">G</code> - response body (NOT
+                            IMPLEMENTED)</p></li><li><p><code class="literal">H</code> - audit log trailer</p></li><li><p><code class="literal">I</code> - reduced multipart request
+                            body</p></li><li><p><code class="literal">J</code> - multipart files information
+                            (NOT IMPLEMENTED)</p></li><li><p><code class="literal">K</code> - matched rules
+                            information</p></li><li><p><code class="literal">Z</code> - audit log footer</p></li></ul></div></p><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N102DE"></a>Audit Log Header (<code class="literal">A</code>)</h4></div></div><div></div></div><p>ModSecurity 2.x audit log entries always begin with the header part. For
+                    example:</p><pre class="programlisting">--c7036611-A--
+[09/Jan/2008:12:27:56 +0000] OSD4l1BEUOkAAHZ8Y3QAAAAH 209.90.77.54 64995
+  80.68.80.233 80</pre><p>The header contains only one line, with the following information on
+                    it:</p><div class="orderedlist"><ol type="1"><li><p>Timestamp</p></li><li><p>Unique transaction ID</p></li><li><p>Source IP address (IPv4 or IPv6)</p></li><li><p>Source port</p></li><li><p>Destination IP address (IPv4 or IPv6)</p></li><li><p>Destination port</p></li></ol></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N10301"></a>Request Headers (<code class="literal">B</code>)</h4></div></div><div></div></div><p>The request headers part contains the request line and the request headers.
+                    The information present in this part will not be identical to that sent by the
+                    client responsible for the transaction. ModSecurity 2.x for Apache does not have
+                    access to the raw data; it sees what Apache itself sees. While the end result
+                    may be identical to the raw request, differences are possible in some
+                    areas:</p><div class="orderedlist"><ol type="1"><li><p>If any of the fields are <code class="literal">NUL</code>-terminated, Apache
+                            will only see the content prior to the NUL.</p></li><li><p>Headers that span multiple lines (feature known as header folding)
+                            will be collapsed into a single line.</p></li><li><p>Multiple headers with the same name will be combined into a single
+                            header (as allowed by the HTTP RFC).</p></li></ol></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N1031A"></a>Request Body (<code class="literal">C</code>)</h4></div></div><div></div></div><p>This part contains the request body of the transaction, after dechunking and
+                    decompression (if applicable).</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N10323"></a>Intended Response Headers (<code class="literal">D</code>)</h4></div></div><div></div></div><p>This part contains the status line and the request headers that would have
+                    been delivered to the client had ModSecurity not intervened. Thus this part
+                    makes sense only for transactions where ModSecurity altered the data flow. By
+                    differentiating before the intended and the final response headers, we are able
+                    to record what was internally ready for sending, but also what was actually
+                    sent.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>This part is reserved for future use. It is not implemented in ModSecurity
+                        2.x.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N1032F"></a>Intended Response Body (<code class="literal">E</code>)</h4></div></div><div></div></div><p>This part contains the transaction response body (before compression and
+                    chunking, where used) that was either sent or would have been sent had
+                    ModSecurity not intervened. You can find whether interception took place by
+                    looking at the <code class="literal">Action</code> header of the part <code class="literal">H</code>. If that header is present, and the interception took place in
+                    phase 3 or 4 then the <code class="literal">E</code> part contains the intended response
+                    body. Otherwise, it contains the actual response body.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>Once the <code class="literal">G</code> (actual response body) part is implemented,
+                        part <code class="literal">E</code> will be present only in audit logs that contain a
+                        transaction that was intercepted, and there will be no need for further
+                        analsys.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N1034F"></a>Response Headers (<code class="literal">F</code>)</h4></div></div><div></div></div><p>This part contains the actual response headers sent to the client. Since
+                    ModSecurity 2.x for Apache does not access the raw connection data, it
+                    constructs part <code class="literal">F</code> out of the internal Apache data structures
+                    that hold the response headers.</p><p>Some headers (the <code class="literal">Date</code> and <code class="literal">Server</code>
+                    response headers) are generated just before they are sent and ModSecurity is not
+                    able to record those. You should note than ModSecurity is working as part of a
+                    reverse proxy, the backend web server will have generated these two servers, and
+                    in that case they will be recorded. </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N10366"></a>Response Body (G)</h4></div></div><div></div></div><p>When implemented, this part will contain the actual response body before
+                    compression and chunking.</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>This part is reserved for future use. It is not implemented in ModSecurity
+                        2.x.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N1036E"></a>Audit Log Trailer (H)</h4></div></div><div></div></div><p>Part <code class="literal">H</code> contains additional transaction meta-data that was
+                    obtained from the web server or from ModSecurity itself. The part contains a
+                    number of trailer headers, which are similar to HTTP headers (without support
+                    for header folding):<div class="orderedlist"><ol type="1"><li><p>Action</p></li><li><p>Apache-Error</p></li><li><p>Message</p></li><li><p>Producer</p></li><li><p>Response-Body-Transformed</p></li><li><p>Sanitised-Args</p></li><li><p>Sanitised-Request-Headers</p></li><li><p>Sanitised-Response-Headers</p></li><li><p>Server</p></li><li><p>Stopwatch</p></li><li><p>WebApp-Info</p></li></ol></div></p><div class="section" lang="en"><div class="titlepage"><div><div><h5 class="title"><a name="N1039B"></a>Action</h5></div></div><div></div></div><p>The <code class="literal">Action</code> header is present only for the transactions
+                        that were intercepted:</p><pre class="programlisting">Action: Intercepted (phase 2)</pre><p>The phase information documents the phase in which the decision to
+                        intercept took place.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h5 class="title"><a name="N103A9"></a>Apache-Error</h5></div></div><div></div></div><p>The Apache-Error header contains Apache error log messages observed by
+                        ModSecurity, excluding those sent by ModSecurity itself. For example:</p><pre class="programlisting">Apache-Error: [file "/tmp/buildd/apache2-2.0.54/build-tree/apache2/server/
+  core.c"] [line 3505] [level 3] File does not exist: /var/www/www.
+  modsecurity.org/fst/documentation/modsecurity-apache/2.5.0-dev2</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h5 class="title"><a name="N103B1"></a>Message</h5></div></div><div></div></div><p>Zero or more <code class="literal">Message</code> headers can be present in any
+                        trailer, and each such header will represent a single ModSecurity warning or
+                        error, displayed in the order they were raised.</p><p>The example below was broken into multiple lines to make it fit this
+                        page:</p><pre class="programlisting">Message: Access denied with code 400 (phase 2). Pattern match "^\w+:/" at
+  REQUEST_URI_RAW. [file "/etc/apache2/rules-1.6.1/modsecurity_crs_20_
+  protocol_violations.conf"] [line "74"] [id "960014"] [msg "Proxy access
+  attempt"] [severity "CRITICAL"] [tag "PROTOCOL_VIOLATION/PROXY_ACCESS"]</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h5 class="title"><a name="N103BF"></a>Producer</h5></div></div><div></div></div><p>The <code class="literal">Producer</code> header identifies the product that
+                        generated the audit log. For example:</p><pre class="programlisting">Producer: ModSecurity for Apache/2.5.5 (http://www.modsecurity.org/).</pre><p>ModSecurity allows rule sets to add their own signatures to the <code class="literal">Producer</code> information (this is done using the <code class="literal">SecComponentSignature</code> directive). Below is an example of the
+                            <code class="literal">Producer</code> header with the signature of one component
+                        (all one line):</p><pre class="programlisting">Producer: ModSecurity for Apache/2.5.5 (http://www.modsecurity.org/);
+    MyComponent/1.0.0 (Beta).</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h5 class="title"><a name="N103DC"></a>Response-Body-Transformed</h5></div></div><div></div></div><p>This header will appear in every audit log that contains a response
+                        body:</p><pre class="programlisting">Response-Body-Transformed: Dechunked</pre><p>The contents of the header is constant at present, so the header is only
+                        useful as a reminder that the recorded response body is not identical to the
+                        one sent to the client. The actual content is the same, except that Apache
+                        may further compress the body and deliver it in chunks.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h5 class="title"><a name="N103E6"></a>Sanitised-Args</h5></div></div><div></div></div><p>The <code class="literal">Sanitised-Args</code> header contains a list of arguments
+                        that were sanitised (each byte of their content replaced with an asterisk)
+                        before logging. For example:</p><pre class="programlisting">Sanitised-Args: "old_password", "new_password", "new_password_repeat".</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h5 class="title"><a name="N103F2"></a>Sanitised-Request-Headers</h5></div></div><div></div></div><p>The <code class="literal">Sanitised-Request-Headers</code> header contains a list of
+                        request headers that were sanitised before logging. For example:</p><pre class="programlisting">Sanitised-Request-Headers: "Authentication".</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h5 class="title"><a name="N103FE"></a>Sanitised-Response-Headers</h5></div></div><div></div></div><p>The <code class="literal">Sanitised-Response-Headers</code> header contains a list
+                        of response headers that were sanitised before logging. For example:</p><pre class="programlisting">Sanitised-Response-Headers: "My-Custom-Header".</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h5 class="title"><a name="N1040A"></a>Server</h5></div></div><div></div></div><p>The <code class="literal">Server</code> header identifies the web server. For
+                        example:</p><pre class="programlisting">Server: Apache/2.0.54 (Debian GNU/Linux) mod_ssl/2.0.54 OpenSSL/0.9.7e</pre><p>This information may sometimes be present in any of the parts that contain
+                        response headers, but there are a few cases when it isn't:<div class="orderedlist"><ol type="1"><li><p>None of the response headers were recoreded.</p></li><li><p>The information in the response headers is not accurate
+                                    because server signature masking was used.</p></li></ol></div></p></div><div class="section" lang="en"><div class="titlepage"><div><div><h5 class="title"><a name="N10421"></a>Stopwatch</h5></div></div><div></div></div><p>The <code class="literal">Stopwatch</code> header provides certain diagnostic
+                        information that allows you to determine the performance of the web server
+                        and of ModSecurity itself. It will typically look like this:</p><pre class="programlisting">Stopwatch: 1222945098201902 2118976 (770* 4400 -)</pre><p>Each line can contain up to 5 different values. Some values can be absent;
+                        each absent value will be replaced with a dash.</p><p>The meanings of the values are as follows (all values are in
+                            microseconds):<div class="orderedlist"><ol type="1"><li><p>Transaction timestamp in microseconds since January 1st,
+                                    1970.</p></li><li><p>Transaction duration.</p></li><li><p>The time between the moment Apache started processing the
+                                    request and until phase 2 of ModSecurity began. If an asterisk
+                                    is present that means the time includes the time it took
+                                    ModSecurity to read the request body from the client (typically
+                                    slow). This value can be used to provide a rough estimate of the
+                                    client speed, but only with larger request bodies (the smaller
+                                    request bodies may arrive in a single TCP/IP packet).</p></li><li><p>The time between the start of processing and until phase 2 was
+                                    completed. If you substract the previous value from this value
+                                    you will get the exact duration of phase 2 (which is the main
+                                    rule processing phase).</p></li><li><p>The time between the start of request processing and util we
+                                    began sending a fully-buffered response body to the client. If
+                                    you substract this value from the total transaction duration and
+                                    divide with the response body size you may get a rough estimate
+                                    of the client speed, but only for larger response bodies.</p></li></ol></div></p></div><div class="section" lang="en"><div class="titlepage"><div><div><h5 class="title"><a name="N10443"></a>WebApp-Info</h5></div></div><div></div></div><p>The <code class="literal">WebApp-Info</code> header contains information on the
+                        application to which the recorded transaction belongs. This information will
+                        appear only if it is known, which will happen if <code class="literal">SecWebAppId</code> was set, or <code class="literal">setsid</code> or <code class="literal">setuid</code> executed in the transaction.</p><p>The header uses the following format:</p><pre class="programlisting">WebApp-Info: "WEBAPPID" "SESSIONID" "USERID"</pre><p>Each unknown value is replaced with a dash.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N1045F"></a>Reduced Multipart Request Body (<code class="literal">I</code>)</h4></div></div><div></div></div><p>Transactions that deal with file uploads tend to be large, yet the file
+                    contents is not always relevant from the security point of view. The <code class="literal">I</code> part was designed to avoid recording raw <code class="literal">multipart/form-data</code> request bodies, replacing them with a
+                    simulated <code class="literal">application/x-www-form-urlencoded</code> body that
+                    contains the same key-value parameters.</p><p>The reduced multipart request body will not contain any file information. The
+                        <code class="literal">J</code> part (currently not implemented) is intended to carry
+                    the file metadata.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N1047A"></a>Multipart Files Information (<code class="literal">J</code>)</h4></div></div><div></div></div><p>The purpose of part <code class="literal">J</code> is to record the information on the
+                    files contained in a <code class="literal">multipart/form-data</code> request body. This
+                    is handy in the cases when the original request body was not recorded, or when
+                    only a reduced version was recorded (e.g. when part <code class="literal">I</code> was
+                    used instead of part <code class="literal">C</code>).</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>This part is reserved for future use. It is not implemented in ModSecurity
+                        2.x.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N10496"></a>Matched Rules (<code class="literal">K</code>)</h4></div></div><div></div></div><p>The matched rules part contains a record of all ModSecurity rules that matched
+                    during transaction processing. You should note that if a rule that belongs to a
+                    chain matches then the entire chain will be recorded. This is because, even
+                    though the disruptive action may not have executed, other per-rule actions have,
+                    and you will need to see the entire chain in order to understand the
+                    rules.</p><p>This part is available starting with ModSecurity 2.5.x.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N104A1"></a>Audit Log Footer (<code class="literal">Z</code>)</h4></div></div><div></div></div><p>Part <code class="literal">Z</code> is a special part that only has a boundary but no
+                    content. Its only purpose is to signal the end of an audit log.</p></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N104AE"></a>Storage Formats</h3></div></div><div></div></div><p>ModSecurity supports two audit log storage formats:<div class="orderedlist"><ol type="1"><li><p><span class="emphasis"><em>Serial</em></span> audit log format - multiple audit log
+                            files stored in the same file.</p></li><li><p><span class="emphasis"><em>Concurrent</em></span> audit log format - one file is used
+                            for every audit log.</p></li></ol></div></p><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N104C0"></a>Serial Audit Log Format</h4></div></div><div></div></div><p>The serial audit log format stores multiple audit log entries within the same
+                    file (one after another). This is often very convinent (audit log entries are
+                    easy to find) but this format is only suitable for light logging in the current
+                    ModSecurity implementation because writing to the file is serialised: only one
+                    audit log entry can be written at any one time.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N104C5"></a>Concurrent Audit Log Format</h4></div></div><div></div></div><p>The concurrent audit log format uses one file per audit log entry, and allows
+                    many transactions to be recorded at once. A hierarchical directory structure is
+                    used to ensure that the number of files created in any one directory remains
+                    relatively small. For example:</p><pre class="programlisting">$LOGGING-HOME/20081128/20081128-1414/20081128-141417-
+  egDKy38AAAEAAAyMHXsAAAAA</pre><p>The current time is used to work out the directory structure. The file name is
+                    constructed using the current time and the transaction ID.</p><p>The creation of every audit log in concurrent format is recorded with an entry
+                    in the concurrent audit log <span class="emphasis"><em>index file</em></span>. The format of each
+                    line resembles the common web server access log format. For example:</p><pre class="programlisting">192.168.0.111 192.168.0.1 - - [28/Nov/2008:15:06:32 +0000]
+  "GET /?p=\\ HTTP/1.1" 200 69 "-" "-" NOfRx38AAAEAAAzcCU4AAAAA
+  "-" /20081128/20081128-1506/20081128-150632-NOfRx38AAAEAAAzcCU4AAAAA
+  0 1183 md5:ffee2d414cd43c2f8ae151652910ed96</pre><p>The tokens on the line are as follows:</p><div class="orderedlist"><ol type="1"><li><p>Hostname (or IP address, if the hostname is not known)</p></li><li><p>Source IP address</p></li><li><p>Remote user (from HTTP Authentication)</p></li><li><p>Local user (from identd)</p></li><li><p>Timestamp</p></li><li><p>Request line</p></li><li><p>Response status</p></li><li><p>Bytes sent (in the response body)</p></li><li><p>Referrer information</p></li><li><p>User-Agent information</p></li><li><p>Transaction ID</p></li><li><p>Session ID</p></li><li><p>Audit log file name (relative to the audit logging home, as configured
+                            using the <code class="literal">SecAuditLogStorageDir</code> directive)</p></li><li><p>Audit log offset</p></li><li><p>Audit log size</p></li><li><p>Audit log hash (the has begins with the name of the algorithm used,
+                            followed by a colon, followed by the hexadecimal representation of the
+                            hash itself); this hash can be used to verify that the transaction was
+                            correctly recorded and that it hasn't been modified since.</p></li></ol></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>Lines in the index file will be up to 3980 bytes long, and the information
+                        logged will be reduced to fit where necessary. Reduction will occur within
+                        the individual fields, but the overall format will remain the same. The
+                        character <code class="literal">L</code> will appear as the last character on a
+                        reduced line. A space will be the last character on a line that was not
+                        reduced to stay within the limit.</p></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N10517"></a>Transport Protocol</h3></div></div><div></div></div><p>Audit logs generated in multi-sensor deployments are of little use if left on the
+                sensors. More commonly, they will be transported to a central logging server using
+                the transport protocol described in this section:</p><div class="orderedlist"><ol type="1"><li><p>The transport protocol is based on the HTTP protocol.</p></li><li><p>The server end is an SSL-enabled web server with HTTP Basic Authentication
+                        configured.</p></li><li><p>Clients will open a connection to the centralisation web server and
+                        authenticate (given the end-point URI, the username and the
+                        password).</p></li><li><p>Clients will submit every audit log in a single <code class="literal">PUT</code>
+                        transaction, placing the file in the body of the request and additional
+                        information in the request headers (see below for details).</p></li><li><p>Server will process each submission and respond with an appropriate status
+                        code: </p><div class="orderedlist"><ol type="a"><li><p>200 (OK) - the submission was processed; the client can delete the
+                                corresponding audit log entry if it so desires. The same audit log
+                                entry must not be submitted again.</p></li><li><p>409 (Conflict) - if the submission is in invalid format and cannot
+                                be processed. The client should attempt to fix the problem with the
+                                submission and attempt delivery again at a later time. This error is
+                                generally going to occur due to a programming error in the protocol
+                                implementation, and not because of the content of the audit log
+                                entry that is being transported. </p></li><li><p>500 (Internal Server Error) - if the server was unable to
+                                correctly process the submission, due to its own fault. The client
+                                should re-attempt delivery at a later time. A client that starts
+                                receiving 500 reponses to all its submission should suspend its
+                                operations for a period of time before continuing.</p></li></ol></div></li></ol></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>Server implementations are advised to accept all submissions that correctly
+                    implement the protocol. Clients are unlikely to be able to overcome problems
+                    within audit log entries, so such problems are best resolved on the server
+                    side.</p></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>When en error occurs, the server may place an explanation of the problem in
+                    the text part of the response line.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N10544"></a>Request Headers Information</h4></div></div><div></div></div><p>Each audit log entry submission must contain additional information in the
+                    request headers:</p><div class="orderedlist"><ol type="1"><li><p>Header <code class="literal">X-Content-Hash</code> must contain the audit log
+                            entry hash. Clients should expect the audit log entries to be validated
+                            against the hash by the server.</p></li><li><p>Header <code class="literal">X-ForensicLog-Summary</code> must contain the
+                            entire concurrent format index line.</p></li><li><p>The <code class="literal">Content-Lenght</code> header must be present and
+                            contain the length of the audit log entry.</p></li></ol></div></div></div></div></div><div align="center" class="copyright">Copyright (C) 2004-2009 <a href="http://www.breach.com">Breach Security</a></div></body></html>
