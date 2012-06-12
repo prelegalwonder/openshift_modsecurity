@@ -1,0 +1,45 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Miscellaneous Topics</title><link href="modsecurity-reference.css" rel="stylesheet" type="text/css"><meta content="DocBook XSL Stylesheets V1.69.1" name="generator"><link rel="start" href="index.html" title="ModSecurity&reg; Reference
+  Manual"><link rel="up" href="index.html" title="ModSecurity&reg; Reference
+  Manual"><link rel="prev" href="ar01s11.html" title="Persistant Storage"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div style="background:#F5F5F5;width:100%;border-top:1px solid #DDDDDD;border-bottom:1px solid #DDDDDD"><table width="100%" cellspacing="0" cellpadding="0"><tr><td><a href="http://www.modsecurity.org"><img style="margin:4px" src="modsecurity.gif" width="120" height="36" alt="ModSecurity" border="0"></a></td><td align="right"><a href="http://www.breach.com"><img style="margin:6px" src="breach-logo-small.gif" height="36" width="100" border="0"></a></td></tr></table></div><div id="navheader"><table summary="Navigation header" width="100%"><tr><th align="center" colspan="3">Miscellaneous Topics</th></tr><tr><td align="left" width="20%"><a accesskey="p" href="ar01s11.html">Prev</a>&nbsp;</td><td align="center" width="60%">&nbsp;<a accesskey="h" href="index.html">Home</a></td><td align="right" width="20%">&nbsp;</td></tr></table><hr size="1"></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N11F4E"></a>Miscellaneous Topics</h2></div></div><div></div></div><p></p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="N11F52"></a>Impedance Mismatch</h3></div></div><div></div></div><p>Web application firewalls have a difficult job trying to make
+      sense of data that passes by, without any knowledge of the application
+      and its business logic. The protection they provide comes from having an
+      independent layer of security on the outside. Because data validation is
+      done twice, security can be increased without having to touch the
+      application. In some cases, however, the fact that everything is done
+      twice brings problems. Problems can arise in the areas where the
+      communication protocols are not well specified, or where either the
+      device or the application do things that are not in the specification.
+      In such cases it may be possible to design payload that will be
+      interpreted in one way by one device and in another by the other device.
+      This problem is better known as Impedance Mismatch. It can be exploited
+      to evade the security devices.</p><p>While we will continue to enhance ModSecurity to deal with various
+      evasion techniques the problem can only be minimized, but never solved.
+      With so many different application backend chances are some will always
+      do something completely unexpected. The only solution is to be aware of
+      the technologies in the backend when writing rules, adapting the rules
+      to remove the mismatch. See the next section for some examples.</p><div class="section" lang="en"><div class="titlepage"><div><div><h4 class="title"><a name="N11F59"></a>PHP Peculiarities for ModSecurity Users</h4></div></div><div></div></div><p>When writing rules to protect PHP applications you need to pay
+        attention to the following facts:</p><div class="orderedlist"><ol type="1"><li><p>When "register_globals" is set to "On" request parameters
+            are automatically converted to script variables. In some PHP
+            versions it is even possible to override the $GLOBALS
+            array.</p></li><li><p>Whitespace at the beginning of parameter names is ignored.
+            (This is very dangerous if you are writing rules to target
+            specific named variables.)</p></li><li><p>The remaining whitespace (in parameter names) is converted
+            to underscores. The same applies to dots and to a "[" if the
+            variable name does not contain a matching closing bracket.
+            (Meaning that if you want to exploit a script through a variable
+            that contains an underscore in the name you can send a parameter
+            with a whitespace or a dot instead.)</p></li><li><p>Cookies can be treated as request parameters.</p></li><li><p>The discussion about variable names applies equally to the
+            cookie names.</p></li><li><p>The order in which parameters are taken from the request and
+            the environment is EGPCS (environment, GET, POST, Cookies,
+            built-in variables). This means that a POST parameter will
+            overwrite the parameters transported on the request line (in
+            QUERY_STRING).</p></li><li><p>When "magic_quotes_gpc" is set to "On" PHP will use
+            backslash to escape the following characters: single quote, double
+            quote, backslash, and the nul byte.</p></li><li><p>If "magic_quotes_sybase" is set to "On" only the single
+            quote will be escaped using another single quote. In this case the
+            "magic_quotes_gpc" setting becomes irrelevant. The
+            "magic_quotes_sybase" setting completely overrides the
+            "magic_quotes_gpc" behaviour but "magic_quotes_gpc" still must be
+            set to "On" for the Sybase-specific quoting to be work.</p></li><li><p>PHP will also automatically create nested arrays for you.
+            For example "p[x][y]=1" results in a total of three
+            variables.</p></li></ol></div></div></div></div><div id="navfooter"><hr size="1"><table summary="Navigation footer" width="100%"><tr><td align="left" width="40%"><a accesskey="p" href="ar01s11.html">Prev</a>&nbsp;</td><td align="center" width="20%">&nbsp;</td><td align="right" width="40%">&nbsp;</td></tr><tr><td valign="top" align="left" width="40%">Persistant Storage&nbsp;</td><td align="center" width="20%"><a accesskey="h" href="index.html">Home</a></td><td valign="top" align="right" width="40%">&nbsp;</td></tr></table></div><div align="center" class="copyright">Copyright (C) 2004-2010 <a href="http://www.breach.com">Breach Security</a></div></body></html>
