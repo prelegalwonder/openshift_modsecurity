@@ -6,3 +6,5 @@
 
 cp -r $OPENSHIFT_REPO_DIR/etc $OPENSHIFT_DATA_DIR/
 cp -r $OPENSHIFT_REPO_DIR/var $OPENSHIFT_DATA_DIR/
+ln -s /lib64/libdb-4.7.so $OPENSHIFT_REPO_DIR/lib/libdb-4.8.so
+
