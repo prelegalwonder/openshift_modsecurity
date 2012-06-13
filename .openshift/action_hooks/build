@@ -8,4 +8,3 @@ mkdir -p $OPENSHIFT_LOG_DIR/httpd
 cp -r $OPENSHIFT_REPO_DIR/etc $OPENSHIFT_DATA_DIR/
 
 ln -s /usr/lib64/httpd/modules $OPENSHIFT_REPO_DIR/modules
-ln -s $OPENSHIFT_REPO_DIR/usr/lib64/httpd/modules/mod_security2.so $OPENSHIFT_REPO_DIR/modules/
