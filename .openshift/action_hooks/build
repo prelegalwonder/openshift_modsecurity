@@ -18,5 +18,5 @@ ln -s /usr/lib64/httpd/modules $OPENSHIFT_REPO_DIR/modules
 mkdir -p $OPENSHIFT_LOG_DIR/mlogc
 
 echo $OPENSHIFT_LOG_DIR
-sed -i 's/COLLECTOR_ROOT/'$OPENSHIFT_LOG_DIR'/' $OPENSHIFT_DATA_DIR/etc/mlogc.conf
+sed -i 's#COLLECTOR_ROOT#'$OPENSHIFT_LOG_DIR'#' $OPENSHIFT_DATA_DIR/etc/mlogc.conf
 sed -i 's/INTERNAL_IP/'$OPENSHIFT_INTERNAL_IP'/' $OPENSHIFT_DATA_DIR/etc/mlogc.conf
