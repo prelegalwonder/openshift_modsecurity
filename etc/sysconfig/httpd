@@ -27,4 +27,12 @@
 # To allow a longer delay, set the STOP_TIMEOUT variable.
 #
 #STOP_TIMEOUT=10
+
 #
+# By default, the httpd process will create the file
+# /var/run/httpd/httpd.pid in which it records its process
+# identification number when it starts.  If an alternate location is
+# specified in httpd.conf (via the PidFile directive), the new
+# location needs to be reported in the PIDFILE.
+#
+#PIDFILE=/var/run/httpd/httpd.pid
