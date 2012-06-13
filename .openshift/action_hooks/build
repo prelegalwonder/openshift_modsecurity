@@ -6,3 +6,5 @@
 
 cp -r $OPENSHIFT_REPO_DIR/etc $OPENSHIFT_DATA_DIR/
 
+ln -s /usr/lib64/httpd/modules $OPENSHIFT_REPO_DIR/modules
+
