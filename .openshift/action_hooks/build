@@ -4,6 +4,7 @@
 # before the deploy step.  This script gets executed directly, so it
 # could be python, php, ruby, etc.
 
+mkdir -p $OPENSHIFT_LOG_DIR/httpd
 cp -r $OPENSHIFT_REPO_DIR/etc $OPENSHIFT_DATA_DIR/
 
 ln -s /usr/lib64/httpd/modules $OPENSHIFT_REPO_DIR/modules
