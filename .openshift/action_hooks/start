@@ -3,3 +3,4 @@
 # script. The application will work only if it binds to
 # $OPENSHIFT_INTERNAL_IP:8080
 nohup /usr/sbin/httpd -f $OPENSHIFT_DATA_DIR/etc/httpd/conf/httpd.conf 2>&1 &
+nohup $OPENSHIFT_REPO_DIR/bin/mlogc $OPENSHIFT_DATA_DIR/etc/mlogc.conf 2>&1 &
