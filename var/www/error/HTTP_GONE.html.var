@@ -78,24 +78,25 @@ Body:----------en--
 ----------en--
 
 Content-language: es
-Content-type: text/html
+Content-type: text/html; charset=ISO-8859-1
 Body:----------es--
-<!--#set var="TITLE" value="El recurso ya no est&aacute; disponible!" -->
-<!--#include virtual="include/top.html" -->
+<!--#set var="CONTENT_LANGUAGE" value="es"
+--><!--#set var="TITLE" value="&iexcl;Recurso no disponible!"
+--><!--#include virtual="include/top.html" -->
 
-    El URL solicitado actualmente no esta disponible en este servidor y
-   no existe una direcci&oacute;n a la cual referirlo.
+	Los recursos solicitados ya no est&aacute;n disponibles en
+	este servidor y no existe una direcci&oacute;n alternativa.
 
-   <!--#if expr="$HTTP_REFERER" -->
+  <!--#if expr="$HTTP_REFERER" -->
 
-    Por favor comunique al autor de la
-    <a href="<!--#echo encoding="url" var="HTTP_REFERER"-->">p&aacute;gina
-    que lo refiri&oacute;</a> que el URL es obsoleto.
+	Le solicitamos que comunique al autor de la 
+	<a href="<!--#echo encoding="url" var="HTTP_REFERER"
+        -->">p&aacute;gina referente</a> que el enlace est&aacute; obsoleto.
 
   <!--#else -->
-
-    Si usted sigui&oacute; el URL desde una p&aacute;gina externa,
-    por favor contacte al autor de esa p&aacute;gina.
+	
+	Si usted sigui&oacute; el enlace desde una p&aacute;gina externa, 
+	por favor contacte con el autor de esa p&aacute;gina.
 
   <!--#endif -->
 
@@ -110,13 +111,13 @@ Body:----------fr--
 --><!--#include virtual="include/top.html" -->
 
     L'URL demand&eacute;e n'est plus accessible sur ce serveur et il
-    n'y a pas d'adresse de redirection. 
+    n'y a pas d'adresse de suite. 
 
   <!--#if expr="$HTTP_REFERER" --> 
 
     Nous vous prions d'informer l'auteur de
     <a href="<!--#echo encoding="url" var="HTTP_REFERER" -->">la 
-    page en question</a> que la r&eacute;f&eacute;rence n'est plus valable.
+    page en question</a> que la r&eacute;f&eacute;rence n'est plus actuelle.
 
   <!--#else --> 
 
@@ -312,32 +313,6 @@ Body:-------pt-br--
 
 <!--#include virtual="include/bottom.html" -->
 -------pt-br--
-
-Content-language: pt
-Content-type: text/html; charset=ISO-8859-1
-Body:----------pt--
-<!--#set var="TITLE" value="Recurso n&atilde;o dispon&iacute;vel!"
---><!--#include virtual="include/top.html" -->
-
-	O URL desejado j&aacute; n&atilde;o est&aacute; dispon&iacute;vel
-	neste servidor e n&atilde;o existe endere&ccedil;o alternativo.
-
-  <!--#if expr="$HTTP_REFERER" -->
-
-	Por favor informe o autor da
-	<a href="<!--#echo encoding="url" var="HTTP_REFERER" -->">p&aacute;gina
-	origin&aacute;ria</a> que a hiperliga&ccedil;&atilde;o est&aacute;
-	desactualizada.
-
-  <!--#else -->
-
-	Se chegou aqui a partir de uma hiperliga&ccedil;&atilde;o externa,
-	por favor contacte o autor dessa p&aacute;gina.
-
-  <!--#endif -->
-
-<!--#include virtual="include/bottom.html" -->
-----------pt--
 
 Content-language: ro
 Content-type: text/html; charset=ISO-8859-1
