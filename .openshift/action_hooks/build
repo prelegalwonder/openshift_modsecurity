@@ -5,6 +5,12 @@
 # could be python, php, ruby, etc.
 
 mkdir -p $OPENSHIFT_LOG_DIR/httpd
+mkdir -p $OPENSHIFT_DATA_DIR/docroot
+
+rm -rf $OPENSHIFT_DATA_DIR/etc
+rm -rf $OPENSHIFT_DATA_DIR/var
+
 cp -r $OPENSHIFT_REPO_DIR/etc $OPENSHIFT_DATA_DIR/
+cp -r $OPENSHIFT_REPO_DIR/var $OPENSHIFT_DATA_DIR/
 
 ln -s /usr/lib64/httpd/modules $OPENSHIFT_REPO_DIR/modules
