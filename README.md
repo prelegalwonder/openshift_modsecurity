@@ -35,6 +35,10 @@ Modify modsec/etc/httpd/conf.d/mod_proxy.conf
 
     change Proxypass directives from http://<gear>-<namespace>.rhcloud.com to the gear(s) you want to protect.
 
+Commit your changes to proxy config
+
+    git commit -a -m "tweaking mod_proxy.conf for my gears"
+
 Then push the repo upstream
 
     git push
