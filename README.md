@@ -49,7 +49,7 @@ to the audit logs. Feel free to contribute if you understand how to do this.
 Reference
 ------------------------
 
-(Modsecurity Homepage)[http://www.modsecurity.org]
-(OWASP Homepage)[http://www.owasp.org]
+[Modsecurity Homepage](http://www.modsecurity.org)
+[OWASP Homepage](http://www.owasp.org)
 
 For logging, $OPENSHIFT_LOG_DIR/mlogc has the audit and transaction logs. 
